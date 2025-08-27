@@ -77,7 +77,7 @@ def test_imports():
     
     # Test model validation
     try:
-        from mcp.models import TransactionCategory, GoalType, CustomerCreate
+        from financial_mcp.models import TransactionCategory, GoalType, CustomerCreate
         from decimal import Decimal
         
         # Test enum access

@@ -1,5 +1,6 @@
 streamlit>=1.28.0
 google-generativeai>=0.3.0
+google-adk>=1.12.0
 mysql-connector-python>=8.2.0
 sqlalchemy>=2.0.0
 pydantic>=2.5.0

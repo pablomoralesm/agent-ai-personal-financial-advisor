@@ -106,7 +106,7 @@ This application demonstrates three key Agentic AI concepts:
 2. **Initialize database tables**
    ```bash
    python -c "
-   from mcp.database import db_manager
+   from financial_mcp.database import db_manager
    db_manager.create_tables()
    print('Database tables created successfully!')
    "
@@ -262,7 +262,7 @@ Each agent has configurable:
 1. **Database Connection Test**
    ```bash
    python -c "
-   from mcp.server import mcp_server
+   from financial_mcp.server import mcp_server
    health = mcp_server.health_check()
    print(f'Database Status: {health}')
    "

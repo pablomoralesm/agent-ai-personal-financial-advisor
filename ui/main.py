@@ -24,14 +24,14 @@ st.set_page_config(
 )
 
 # Import application modules
-from mcp.server import mcp_server
-from mcp.models import TransactionCategory, GoalType
+from financial_mcp.server import mcp_server
+from financial_mcp.models import TransactionCategory, GoalType
 from orchestrator.agent_coordinator import agent_coordinator
 from ui.utils import (
     format_currency, format_percentage, get_transaction_categories, get_goal_types,
     create_spending_chart, create_spending_trend_chart, create_goal_progress_chart,
     create_financial_health_gauge, display_workflow_progress, display_agent_response,
-    validate_transaction_form, validate_goal_form, load_custom_css
+    display_adk_response, validate_transaction_form, validate_goal_form, load_custom_css
 )
 from ui.input_helpers import working_number_input, currency_input, integer_input
 
@@ -310,15 +310,29 @@ def render_ai_analysis(customer_id: int):
     """Render AI analysis interface."""
     st.header("AI Financial Analysis")
     
-    # Analysis type selection
-    analysis_type = st.selectbox(
-        "Choose Analysis Type",
-        [
-            "Comprehensive Analysis (All Agents)",
-            "Spending Analysis Only",
-            "Goal Planning Only"
-        ]
-    )
+    # Framework selection
+    col_framework, col_analysis = st.columns([1, 1])
+    
+    with col_framework:
+        framework = st.selectbox(
+            "Choose Framework",
+            [
+                "Original Custom Implementation",
+                "Google ADK Implementation"
+            ],
+            help="Compare the original custom agent implementation with Google's Agent Development Kit (ADK)"
+        )
+    
+    with col_analysis:
+        # Analysis type selection
+        analysis_type = st.selectbox(
+            "Choose Analysis Type",
+            [
+                "Comprehensive Analysis (All Agents)",
+                "Spending Analysis Only",
+                "Goal Planning Only"
+            ]
+        )
     
     col1, col2 = st.columns([1, 2])
     
@@ -328,38 +342,68 @@ def render_ai_analysis(customer_id: int):
         
         if st.button("🚀 Start Analysis", type="primary", use_container_width=True):
             try:
-                # Create appropriate workflow
-                if analysis_type == "Spending Analysis Only":
-                    workflow_id = agent_coordinator.create_spending_analysis_workflow(customer_id)
-                elif analysis_type == "Goal Planning Only":
-                    # For goal planning, we need goal info
-                    goals = mcp_server.get_customer_goals(customer_id, active_only=True)
-                    goal_info = {"existing_goals": [g.model_dump() for g in goals]} if goals else {}
-                    workflow_id = agent_coordinator.create_goal_planning_workflow(customer_id, goal_info)
-                else:
-                    # Comprehensive analysis
-                    goals = mcp_server.get_customer_goals(customer_id, active_only=True)
-                    goal_info = {"existing_goals": [g.model_dump() for g in goals]} if goals else {}
-                    workflow_id = agent_coordinator.create_comprehensive_analysis_workflow(customer_id, goal_info)
-                
-                st.session_state.current_workflow = workflow_id
-                st.success(f"Analysis started! Workflow ID: {workflow_id[:8]}...")
-                
-                # Start the workflow execution
-                with st.spinner("Running AI analysis..."):
-                    # Note: In a production app, this would be handled asynchronously
-                    # For demo purposes, we'll run it synchronously
-                    try:
+                with st.spinner(f"Running AI analysis using {framework}..."):
+                    if framework == "Google ADK Implementation":
+                        # Use ADK implementation
+                        from adk_agents.adk_orchestrator import adk_orchestrator
+                        
+                        if analysis_type == "Comprehensive Analysis (All Agents)":
+                            results = adk_orchestrator.run_analysis_sync(customer_id)
+                            st.session_state.last_analysis = results
+                            st.session_state.analysis_framework = "ADK"
+                            
+                        elif analysis_type == "Spending Analysis Only":
+                            from adk_agents.spending_analyzer_adk import spending_analyzer_adk
+                            results = spending_analyzer_adk.analyze_spending(customer_id)
+                            st.session_state.last_analysis = {"spending_analysis": results}
+                            st.session_state.analysis_framework = "ADK"
+                            
+                        elif analysis_type == "Goal Planning Only":
+                            from adk_agents.goal_planner_adk import goal_planner_adk
+                            # Get first goal for analysis (simplified)
+                            goals = mcp_server.get_goals_by_customer(customer_id)
+                            if goals:
+                                goal_data = {
+                                    'title': goals[0].title,
+                                    'target_amount': float(goals[0].target_amount),
+                                    'current_amount': float(goals[0].current_amount or 0),
+                                    'target_date': goals[0].target_date.isoformat() if goals[0].target_date else None,
+                                    'goal_type': goals[0].goal_type.value
+                                }
+                                results = goal_planner_adk.analyze_goal(customer_id, goal_data)
+                                st.session_state.last_analysis = {"goal_planning": results}
+                            else:
+                                results = {"error": "No goals found for analysis"}
+                                st.session_state.last_analysis = {"goal_planning": results}
+                            st.session_state.analysis_framework = "ADK"
+                    
+                    else:
+                        # Use original custom implementation
+                        if analysis_type == "Spending Analysis Only":
+                            workflow_id = agent_coordinator.create_spending_analysis_workflow(customer_id)
+                        elif analysis_type == "Goal Planning Only":
+                            # For goal planning, we need goal info
+                            goals = mcp_server.get_customer_goals(customer_id, active_only=True)
+                            goal_info = {"existing_goals": [g.model_dump() for g in goals]} if goals else {}
+                            workflow_id = agent_coordinator.create_goal_planning_workflow(customer_id, goal_info)
+                        else:
+                            # Comprehensive analysis
+                            goals = mcp_server.get_customer_goals(customer_id, active_only=True)
+                            goal_info = {"existing_goals": [g.model_dump() for g in goals]} if goals else {}
+                            workflow_id = agent_coordinator.create_comprehensive_analysis_workflow(customer_id, goal_info)
+                        
+                        st.session_state.current_workflow = workflow_id
+                        
                         # Run the workflow (this is a simplified sync version)
                         import asyncio
                         results = asyncio.run(agent_coordinator.execute_workflow(workflow_id))
                         st.session_state.last_analysis = results
-                        st.success("✅ Analysis completed!")
-                    except Exception as e:
-                        st.error(f"Analysis failed: {e}")
+                        st.session_state.analysis_framework = "Original"
+                    
+                    st.success("✅ Analysis completed!")
                         
             except Exception as e:
-                st.error(f"Error starting analysis: {e}")
+                st.error(f"Analysis failed: {e}")
         
         # Workflow status
         if st.session_state.current_workflow:
@@ -376,15 +420,39 @@ def render_ai_analysis(customer_id: int):
         
         if st.session_state.last_analysis:
             results = st.session_state.last_analysis
+            framework_used = getattr(st.session_state, 'analysis_framework', 'Unknown')
             
-            # Display results from each agent
-            for step_name, response in results.items():
-                if step_name == "spending_analysis":
-                    display_agent_response(response.model_dump(), "💸 Spending Analysis")
-                elif step_name == "goal_planning":
-                    display_agent_response(response.model_dump(), "🎯 Goal Planning")
-                elif step_name == "comprehensive_advice":
-                    display_agent_response(response.model_dump(), "🤖 Comprehensive Financial Advice")
+            # Show framework indicator
+            st.info(f"📊 Results from: **{framework_used}** Implementation")
+            
+            if framework_used == "ADK":
+                # Handle ADK results format
+                if 'success' in results and results['success']:
+                    # Comprehensive ADK analysis
+                    if 'spending_analysis' in results:
+                        display_adk_response(results['spending_analysis'], "💸 Spending Analysis (ADK)")
+                    if 'goals_analysis' in results:
+                        display_adk_response(results['goals_analysis'], "🎯 Goal Planning (ADK)")
+                    if 'comprehensive_advice' in results:
+                        display_adk_response(results['comprehensive_advice'], "🤖 Comprehensive Advice (ADK)")
+                else:
+                    # Individual agent results or error
+                    for step_name, response in results.items():
+                        if step_name == "spending_analysis":
+                            display_adk_response(response, "💸 Spending Analysis (ADK)")
+                        elif step_name == "goal_planning":
+                            display_adk_response(response, "🎯 Goal Planning (ADK)")
+                        elif step_name == "comprehensive_advice":
+                            display_adk_response(response, "🤖 Comprehensive Advice (ADK)")
+            else:
+                # Handle original implementation results
+                for step_name, response in results.items():
+                    if step_name == "spending_analysis":
+                        display_agent_response(response.model_dump(), "💸 Spending Analysis (Original)")
+                    elif step_name == "goal_planning":
+                        display_agent_response(response.model_dump(), "🎯 Goal Planning (Original)")
+                    elif step_name == "comprehensive_advice":
+                        display_agent_response(response.model_dump(), "🤖 Comprehensive Advice (Original)")
         else:
             st.info("Run an analysis to see results here.")
 

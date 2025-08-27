@@ -17,14 +17,14 @@ def test_goal_update():
     try:
         # Test 1: Import all required modules
         print("1. Testing imports...")
-        from mcp.server import mcp_server
-        from mcp.models import GoalCreate, GoalResponse
+        from financial_mcp.server import mcp_server
+        from financial_mcp.models import GoalCreate, GoalResponse
         
         print("✅ All modules imported successfully")
         
         # Test 2: Test database methods (without actual DB connection)
         print("\n2. Testing database method structure...")
-        from mcp.database import DatabaseManager
+        from financial_mcp.database import DatabaseManager
         
         # Check if the update_goal method exists
         db_manager = DatabaseManager()
@@ -70,7 +70,7 @@ def test_goal_update_logic():
         print(f"✅ Update data structure: {update_data}")
         
         print("\n3. Testing goal response structure...")
-        from mcp.models import GoalResponse
+        from financial_mcp.models import GoalResponse
         
         # Mock goal data
         goal_dict = {

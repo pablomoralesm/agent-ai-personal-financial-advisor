@@ -14,7 +14,7 @@ import google.generativeai as genai
 from pydantic import BaseModel
 
 from config.gemini import gemini_config
-from mcp.server import mcp_server
+from financial_mcp.server import mcp_server
 
 logger = logging.getLogger(__name__)
 

@@ -14,11 +14,11 @@ def test_all_database_operations():
     print("🧪 Testing all database operations...")
     
     try:
-        from mcp.models import (
+        from financial_mcp.models import (
             CustomerCreate, TransactionCreate, GoalCreate, AdviceCreate,
             CustomerResponse, TransactionResponse, GoalResponse, AdviceResponse
         )
-        from mcp.database import DatabaseManager
+        from financial_mcp.database import DatabaseManager
         from decimal import Decimal
         from datetime import datetime, date
         

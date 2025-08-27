@@ -14,7 +14,7 @@ def test_pydantic_models():
     print("🧪 Testing Pydantic model methods...")
     
     try:
-        from mcp.models import CustomerCreate, CustomerResponse
+        from financial_mcp.models import CustomerCreate, CustomerResponse
         from agents.base_agent import AgentResponse
         from datetime import datetime
         from decimal import Decimal

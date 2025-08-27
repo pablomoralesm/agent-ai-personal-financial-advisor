@@ -20,9 +20,9 @@ def test_database_connection():
     print("🔍 Testing database imports...")
     
     try:
-        from mcp.server import mcp_server
-        from mcp.models import Customer, Transaction, Goal, Advice
-        from mcp.database import DatabaseManager
+        from financial_mcp.server import mcp_server
+        from financial_mcp.models import Customer, Transaction, Goal, Advice
+        from financial_mcp.database import DatabaseManager
         
         print("✅ MCP server import successful")
         print("✅ Database models import successful")

@@ -10,7 +10,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from mcp.models import TransactionCategory, GoalType
+from financial_mcp.models import TransactionCategory, GoalType
 
 
 def format_currency(amount: float) -> str:
@@ -271,6 +271,104 @@ def display_agent_response(response: Dict[str, Any], title: str):
     # Additional data (expandable)
     with st.expander("View detailed analysis"):
         st.json(response.get('data', {}))
+
+
+def display_adk_response(response: Dict[str, Any], title: str):
+    """Display ADK agent response in a formatted way."""
+    st.subheader(title)
+    
+    # Check if response was successful
+    if not response.get('success', True):
+        st.error(f"❌ Analysis failed: {response.get('error', 'Unknown error')}")
+        return
+    
+    # Framework indicator
+    st.info(f"🚀 Powered by Google ADK • Agent: {response.get('agent_name', 'Unknown')}")
+    
+    # Confidence score
+    confidence = response.get('confidence_score', 0)
+    if confidence > 0:
+        confidence_color = "green" if confidence >= 0.8 else "orange" if confidence >= 0.6 else "red"
+        st.markdown(f"**Confidence:** <span style='color: {confidence_color}'>{confidence:.1%}</span>", 
+                    unsafe_allow_html=True)
+    
+    # Handle different response structures
+    if 'analysis' in response:
+        # Spending analysis format
+        analysis = response['analysis']
+        if isinstance(analysis, dict):
+            if 'overall_assessment' in analysis:
+                st.write(f"**Overall Assessment:** {analysis['overall_assessment']}")
+            
+            if 'spending_trends' in analysis:
+                trends = analysis['spending_trends']
+                if isinstance(trends, dict):
+                    st.write(f"**Spending Trend:** {trends.get('trend', 'N/A')} (Confidence: {trends.get('confidence', 'N/A')})")
+                    if 'details' in trends:
+                        st.write(f"Details: {trends['details']}")
+            
+            if 'category_insights' in analysis and isinstance(analysis['category_insights'], list):
+                st.write("**Category Insights:**")
+                for insight in analysis['category_insights'][:5]:  # Show top 5
+                    if isinstance(insight, dict):
+                        st.write(f"• {insight.get('category', 'Unknown')}: ${insight.get('amount', 0):.2f} ({insight.get('percentage', 0):.1f}%)")
+                        if 'insight' in insight:
+                            st.write(f"  _{insight['insight']}_")
+    
+    elif 'goal_analysis' in response:
+        # Goal planning format
+        goal_analysis = response['goal_analysis']
+        if isinstance(goal_analysis, dict):
+            if 'feasibility_assessment' in goal_analysis:
+                st.write(f"**Feasibility Assessment:** {goal_analysis['feasibility_assessment']}")
+            
+            if 'required_monthly_savings' in goal_analysis:
+                st.write(f"**Required Monthly Savings:** ${goal_analysis['required_monthly_savings']:.2f}")
+    
+    elif 'overall_assessment' in response:
+        # Comprehensive advice format
+        assessment = response['overall_assessment']
+        if isinstance(assessment, dict):
+            if 'summary' in assessment:
+                st.write(f"**Summary:** {assessment['summary']}")
+            
+            if 'key_strengths' in assessment and isinstance(assessment['key_strengths'], list):
+                st.write("**Key Strengths:**")
+                for strength in assessment['key_strengths']:
+                    st.write(f"✅ {strength}")
+            
+            if 'primary_concerns' in assessment and isinstance(assessment['primary_concerns'], list):
+                st.write("**Primary Concerns:**")
+                for concern in assessment['primary_concerns']:
+                    st.write(f"⚠️ {concern}")
+    
+    # Recommendations
+    recommendations = response.get('recommendations', [])
+    if recommendations:
+        st.write("**Key Recommendations:**")
+        if isinstance(recommendations, list):
+            for i, rec in enumerate(recommendations[:5], 1):  # Show top 5
+                if isinstance(rec, dict):
+                    priority = rec.get('priority', 'medium')
+                    action = rec.get('action', rec.get('recommendation', str(rec)))
+                    priority_emoji = "🔴" if priority == "high" else "🟡" if priority == "medium" else "🟢"
+                    st.write(f"{i}. {priority_emoji} {action}")
+                else:
+                    st.write(f"{i}. {rec}")
+    
+    # Action plan (for comprehensive advice)
+    if 'prioritized_action_plan' in response and isinstance(response['prioritized_action_plan'], list):
+        st.write("**Action Plan:**")
+        for i, action in enumerate(response['prioritized_action_plan'][:5], 1):
+            if isinstance(action, dict):
+                priority = action.get('priority', i)
+                action_text = action.get('action', 'No action specified')
+                timeline = action.get('timeline', 'Not specified')
+                st.write(f"{priority}. **{action_text}** _(Timeline: {timeline})_")
+    
+    # Additional data (expandable)
+    with st.expander("View detailed ADK response"):
+        st.json(response)
 
 
 def validate_transaction_form(amount: float, category: str, description: str, 

@@ -14,7 +14,7 @@ def test_customer_creation():
     print("🧪 Testing customer creation...")
     
     try:
-        from mcp.models import CustomerCreate, CustomerResponse
+        from financial_mcp.models import CustomerCreate, CustomerResponse
         from decimal import Decimal
         
         # Test model creation
