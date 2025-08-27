@@ -237,6 +237,252 @@ COMMON QUERIES:
         return json.dumps(config, indent=2)
 
 
+class ExampleMCPTools:
+    """
+    Example MCP tool implementations for students to reference.
+    
+    This class demonstrates how to implement MCP tools that will be used
+    by the production MCP server. Students can use these as templates
+    for implementing the complete set of financial analysis tools.
+    """
+    
+    def __init__(self, database_config: MCPDatabaseConfig):
+        """Initialize with database configuration."""
+        self.config = database_config
+        
+    def get_customer_profile(self, customer_id: int) -> dict:
+        """
+        Example MCP tool: Get customer profile by ID.
+        
+        This is a reference implementation showing how to structure
+        an MCP tool that students should implement in their MCP server.
+        
+        Args:
+            customer_id: The ID of the customer to retrieve
+            
+        Returns:
+            Dictionary with customer profile data in MCP format
+            
+        MCP Tool Specification:
+        {
+            "name": "get_customer_profile",
+            "description": "Retrieve customer profile information by customer ID",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "customer_id": {
+                        "type": "integer",
+                        "description": "The unique identifier for the customer"
+                    }
+                },
+                "required": ["customer_id"]
+            }
+        }
+        """
+        try:
+            # This is pseudo-code showing the structure
+            # Students should implement actual database connectivity in their MCP server
+            
+            # Example SQL query (students will implement this in MCP server)
+            query = """
+                SELECT id, name, email, age, income, created_at, updated_at
+                FROM customers 
+                WHERE id = %s
+            """
+            
+            # Example result structure (what the MCP server should return)
+            example_result = {
+                "tool_name": "get_customer_profile",
+                "success": True,
+                "data": {
+                    "customer_id": customer_id,
+                    "name": "John Doe",
+                    "email": "john.doe@example.com", 
+                    "age": 35,
+                    "income": 75000.00,
+                    "created_at": "2024-01-15T10:30:00Z",
+                    "updated_at": "2024-01-15T10:30:00Z"
+                },
+                "metadata": {
+                    "query_executed": query,
+                    "execution_time_ms": 25,
+                    "mcp_version": "1.0.0"
+                }
+            }
+            
+            return example_result
+            
+        except Exception as e:
+            # Error response format for MCP tools
+            return {
+                "tool_name": "get_customer_profile",
+                "success": False,
+                "error": {
+                    "type": "database_error",
+                    "message": str(e),
+                    "customer_id": customer_id
+                },
+                "metadata": {
+                    "mcp_version": "1.0.0"
+                }
+            }
+    
+    def get_mcp_tool_template(self, tool_name: str, description: str, 
+                            parameters: dict, sql_query: str) -> str:
+        """
+        Generate MCP tool template code for students.
+        
+        This helper method shows students how to structure their MCP tools
+        following the standard pattern.
+        
+        Args:
+            tool_name: Name of the MCP tool
+            description: Description of what the tool does
+            parameters: Input parameters schema
+            sql_query: SQL query the tool will execute
+            
+        Returns:
+            Python code template as string
+        """
+        
+        template = f'''
+@server.tool()
+async def {tool_name}({", ".join(f"{k}: {v.get('type', 'str')}" for k, v in parameters.get('properties', {}).items())}):
+    """
+    {description}
+    
+    MCP Tool Implementation for Financial Advisor Database.
+    """
+    try:
+        # Connect to database
+        connection = mysql.connector.connect(
+            host="{self.config.host}",
+            port={self.config.port},
+            database="{self.config.database}",
+            user="{self.config.username}",
+            password="{self.config.password}"
+        )
+        
+        cursor = connection.cursor(dictionary=True)
+        
+        # Execute query
+        query = """{sql_query}"""
+        cursor.execute(query, ({", ".join(parameters.get('properties', {}).keys())},))
+        
+        # Fetch results
+        results = cursor.fetchall()
+        
+        # Close connections
+        cursor.close()
+        connection.close()
+        
+        # Return MCP-formatted response
+        return {{
+            "tool_name": "{tool_name}",
+            "success": True,
+            "data": results,
+            "metadata": {{
+                "query": query,
+                "result_count": len(results),
+                "mcp_version": "1.0.0"
+            }}
+        }}
+        
+    except Exception as e:
+        return {{
+            "tool_name": "{tool_name}",
+            "success": False,
+            "error": {{
+                "type": "database_error",
+                "message": str(e)
+            }},
+            "metadata": {{
+                "mcp_version": "1.0.0"
+            }}
+        }}
+'''
+        return template
+    
+    def get_all_tool_templates(self) -> dict:
+        """
+        Get templates for all required MCP tools.
+        
+        Students can use these templates to implement their complete MCP server.
+        """
+        
+        tools = {
+            "get_customer_profile": {
+                "description": "Retrieve customer profile information by customer ID",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "customer_id": {"type": "integer", "description": "Customer ID"}
+                    },
+                    "required": ["customer_id"]
+                },
+                "sql": "SELECT id, name, email, age, income, created_at, updated_at FROM customers WHERE id = %s"
+            },
+            
+            "get_customer_transactions": {
+                "description": "Retrieve transactions for a customer within a date range",
+                "parameters": {
+                    "type": "object", 
+                    "properties": {
+                        "customer_id": {"type": "integer", "description": "Customer ID"},
+                        "start_date": {"type": "string", "description": "Start date (YYYY-MM-DD)"},
+                        "end_date": {"type": "string", "description": "End date (YYYY-MM-DD)"}
+                    },
+                    "required": ["customer_id"]
+                },
+                "sql": "SELECT * FROM transactions WHERE customer_id = %s AND date BETWEEN %s AND %s ORDER BY date DESC"
+            },
+            
+            "get_customer_goals": {
+                "description": "Retrieve financial goals for a customer",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "customer_id": {"type": "integer", "description": "Customer ID"},
+                        "active_only": {"type": "boolean", "description": "Return only active goals", "default": False}
+                    },
+                    "required": ["customer_id"]
+                },
+                "sql": "SELECT * FROM goals WHERE customer_id = %s AND (is_achieved = FALSE OR %s = FALSE)"
+            },
+            
+            "create_transaction": {
+                "description": "Create a new transaction record",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "customer_id": {"type": "integer", "description": "Customer ID"},
+                        "amount": {"type": "number", "description": "Transaction amount"},
+                        "category": {"type": "string", "description": "Transaction category"},
+                        "description": {"type": "string", "description": "Transaction description"},
+                        "date": {"type": "string", "description": "Transaction date (YYYY-MM-DD)"}
+                    },
+                    "required": ["customer_id", "amount", "category", "description", "date"]
+                },
+                "sql": "INSERT INTO transactions (customer_id, amount, category, description, date) VALUES (%s, %s, %s, %s, %s)"
+            }
+        }
+        
+        # Generate templates for each tool
+        templates = {}
+        for tool_name, tool_config in tools.items():
+            templates[tool_name] = self.get_mcp_tool_template(
+                tool_name=tool_name,
+                description=tool_config["description"],
+                parameters=tool_config["parameters"],
+                sql_query=tool_config["sql"]
+            )
+        
+        return templates
+
+
 # Global configuration instance
 mcp_config = MCPDatabaseConfig.from_env()
 mcp_setup = MCPDatabaseToolsetSetup(mcp_config)
+
+# Example tools for student reference
+example_mcp_tools = ExampleMCPTools(mcp_config)
