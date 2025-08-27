@@ -1,10 +1,16 @@
-# 🔄 Google ADK vs Custom Implementation Comparison
+# 🔄 Multi-Framework Implementation Comparison
 
-This document provides a comprehensive comparison between the **Original Custom Implementation** and the **Google Agent Development Kit (ADK) Implementation** of the Financial Advisor AI system.
+This document provides a comprehensive comparison between **three different approaches** to building AI agent systems: **Original Custom Implementation**, **Google ADK Implementation**, and **MCP-Enhanced ADK Implementation** of the Financial Advisor AI system.
 
 ## 📋 Overview
 
-Both implementations demonstrate different approaches to building multi-agent AI systems for financial advisory services. This comparison helps students understand the trade-offs, benefits, and use cases for each approach.
+This project now demonstrates **three distinct approaches** to building multi-agent AI systems for financial advisory services:
+
+1. **Custom Implementation** (`agents/`) - Built from scratch using Python and direct database access
+2. **ADK Implementation** (`adk_agents/`) - Using Google's Agent Development Kit with direct database integration  
+3. **MCP-Enhanced ADK** (`adk_agents_mcp/`) - ADK + Google's Model Context Protocol for database access
+
+This comparison helps students understand the evolution from custom solutions to enterprise frameworks and the trade-offs involved.
 
 ## 🏗️ Architecture Comparison
 
@@ -28,11 +34,21 @@ Both implementations demonstrate different approaches to building multi-agent AI
 └─────────────────────┘     └─────────────────────┘     └─────────────────────┘
 ```
 
+### MCP-Enhanced ADK Implementation
+```
+┌─────────────────────┐     ┌─────────────────────┐     ┌─────────────────────┐
+│   MCP ADK Agents    │     │  ADK Orchestrator   │     │   MCP Server        │
+│   ├─ SpendingMCP    │────▶│  ├─ MCP Toolset     │────▶│   ├─ MCP Tools      │
+│   ├─ GoalMCP        │     │  ├─ Protocol Mgmt   │     │   ├─ Database API   │
+│   └─ AdvisorMCP     │     │  └─ Tool Chaining   │     │   └─ Schema Tools   │
+└─────────────────────┘     └─────────────────────┘     └─────────────────────┘
+```
+
 ## 📊 Feature Comparison Matrix
 
-| Feature | Custom Implementation | Google ADK Implementation |
-|---------|----------------------|---------------------------|
-| **Framework** | Custom classes & Pydantic | Google ADK + Gemini |
+| Feature | Custom Implementation | Google ADK Implementation | MCP-Enhanced ADK |
+|---------|----------------------|---------------------------|------------------|
+| **Framework** | Custom classes & Pydantic | Google ADK + Gemini | ADK + MCP Protocol |
 | **Agent Definition** | Inheritance-based | Configuration-based |
 | **Tool Integration** | Manual implementation | Built-in toolsets |
 | **Orchestration** | Custom workflow engine | ADK orchestration |
