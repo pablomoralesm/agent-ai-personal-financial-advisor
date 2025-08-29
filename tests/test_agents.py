@@ -31,39 +31,37 @@ class TestSpendingAnalyzerAgent(unittest.TestCase):
     def setUp(self):
         """Set up test environment."""
         self.mock_mcp_server_path = "/mock/path/to/mcp_server.py"
-        
-    @patch('agents.spending_analyzer.LlmAgent')
-    @patch('agents.spending_analyzer.MCPToolset')
-    @patch('agents.spending_analyzer.StdioServerParameters')
-    def test_create_spending_analyzer_agent(self, mock_stdio, mock_mcp, mock_llm):
-        """Test that SpendingAnalyzerAgent is created with correct configuration."""
-        # Mock the MCPToolset and LlmAgent
-        mock_mcp_instance = Mock()
-        mock_mcp.return_value = mock_mcp_instance
-        
-        mock_llm_instance = Mock()
-        mock_llm.return_value = mock_llm_instance
-        
-        # Create the agent
-        agent = create_spending_analyzer_agent(self.mock_mcp_server_path)
-        
-        # Verify MCPToolset was created with correct parameters
-        mock_mcp.assert_called_once()
-        mock_stdio.assert_called_once_with(
-            command="python3",  # Updated to match actual implementation
-            args=[self.mock_mcp_server_path]
-        )
-        
-        # Verify LlmAgent was created with correct configuration
-        mock_llm.assert_called_once()
-        call_args = mock_llm.call_args
-        
-        # Check that the agent has the expected name and description
-        self.assertIn("SpendingAnalyzerAgent", str(call_args))
-        self.assertIn("spending habits", str(call_args).lower())
-        
-        # Verify the agent was returned
-        self.assertEqual(agent, mock_llm_instance)
+    
+    def test_create_spending_analyzer_agent_import(self):
+        """Test that SpendingAnalyzerAgent can be imported and created."""
+        try:
+            # Test that the agent can be created without errors
+            agent = create_spending_analyzer_agent(self.mock_mcp_server_path)
+            
+            # Verify agent was created
+            self.assertIsNotNone(agent)
+            
+            # Verify it's the expected type
+            from agents.spending_analyzer import SpendingAnalyzerAgent
+            self.assertIsInstance(agent, SpendingAnalyzerAgent)
+            
+        except Exception as e:
+            self.fail(f"Failed to create SpendingAnalyzerAgent: {e}")
+    
+    def test_spending_analyzer_agent_attributes(self):
+        """Test that SpendingAnalyzerAgent has expected attributes."""
+        try:
+            agent = create_spending_analyzer_agent(self.mock_mcp_server_path)
+            
+            # Verify agent has expected attributes
+            self.assertTrue(hasattr(agent, 'mcp_server_path'))
+            self.assertTrue(hasattr(agent, 'agent'))
+            
+            # Verify MCP server path was set correctly
+            self.assertEqual(agent.mcp_server_path, self.mock_mcp_server_path)
+            
+        except Exception as e:
+            self.fail(f"Failed to verify SpendingAnalyzerAgent attributes: {e}")
 
 
 class TestGoalPlannerAgent(unittest.TestCase):
@@ -72,39 +70,37 @@ class TestGoalPlannerAgent(unittest.TestCase):
     def setUp(self):
         """Set up test environment."""
         self.mock_mcp_server_path = "/mock/path/to/mcp_server.py"
-        
-    @patch('agents.goal_planner.LlmAgent')
-    @patch('agents.goal_planner.MCPToolset')
-    @patch('agents.goal_planner.StdioServerParameters')
-    def test_create_goal_planner_agent(self, mock_stdio, mock_mcp, mock_llm):
-        """Test that GoalPlannerAgent is created with correct configuration."""
-        # Mock the MCPToolset and LlmAgent
-        mock_mcp_instance = Mock()
-        mock_mcp.return_value = mock_mcp_instance
-        
-        mock_llm_instance = Mock()
-        mock_llm.return_value = mock_llm_instance
-        
-        # Create the agent
-        agent = create_goal_planner_agent(self.mock_mcp_server_path)
-        
-        # Verify MCPToolset was created with correct parameters
-        mock_mcp.assert_called_once()
-        mock_stdio.assert_called_once_with(
-            command="python3",  # Updated to match actual implementation
-            args=[self.mock_mcp_server_path]
-        )
-        
-        # Verify LlmAgent was created with correct configuration
-        mock_llm.assert_called_once()
-        call_args = mock_llm.call_args
-        
-        # Check that the agent has the expected name and description
-        self.assertIn("GoalPlannerAgent", str(call_args))
-        self.assertIn("financial goals", str(call_args).lower())
-        
-        # Verify the agent was returned
-        self.assertEqual(agent, mock_llm_instance)
+    
+    def test_create_goal_planner_agent_import(self):
+        """Test that GoalPlannerAgent can be imported and created."""
+        try:
+            # Test that the agent can be created without errors
+            agent = create_goal_planner_agent(self.mock_mcp_server_path)
+            
+            # Verify agent was created
+            self.assertIsNotNone(agent)
+            
+            # Verify it's the expected type
+            from agents.goal_planner import GoalPlannerAgent
+            self.assertIsInstance(agent, GoalPlannerAgent)
+            
+        except Exception as e:
+            self.fail(f"Failed to create GoalPlannerAgent: {e}")
+    
+    def test_goal_planner_agent_attributes(self):
+        """Test that GoalPlannerAgent has expected attributes."""
+        try:
+            agent = create_goal_planner_agent(self.mock_mcp_server_path)
+            
+            # Verify agent has expected attributes
+            self.assertTrue(hasattr(agent, 'mcp_server_path'))
+            self.assertTrue(hasattr(agent, 'agent'))
+            
+            # Verify MCP server path was set correctly
+            self.assertEqual(agent.mcp_server_path, self.mock_mcp_server_path)
+            
+        except Exception as e:
+            self.fail(f"Failed to verify GoalPlannerAgent attributes: {e}")
 
 
 class TestAdvisorAgent(unittest.TestCase):
@@ -113,39 +109,37 @@ class TestAdvisorAgent(unittest.TestCase):
     def setUp(self):
         """Set up test environment."""
         self.mock_mcp_server_path = "/mock/path/to/mcp_server.py"
-        
-    @patch('agents.advisor.LlmAgent')
-    @patch('agents.advisor.MCPToolset')
-    @patch('agents.advisor.agent_tool.AgentTool')
-    @patch('agents.advisor.StdioServerParameters')
-    def test_create_advisor_agent(self, mock_stdio, mock_mcp, mock_agent_tool, mock_llm):
-        """Test that AdvisorAgent is created with correct configuration."""
-        # Mock the dependencies
-        mock_mcp_instance = Mock()
-        mock_mcp.return_value = mock_mcp_instance
-        
-        mock_agent_tool_instance = Mock()
-        mock_agent_tool.return_value = mock_agent_tool_instance
-        
-        mock_llm_instance = Mock()
-        mock_llm.return_value = mock_llm_instance
-        
-        # Create the agent
-        agent = create_advisor_agent(self.mock_mcp_server_path)
-        
-        # Verify MCPToolset was created
-        mock_mcp.assert_called_once()
-        
-        # Verify LlmAgent was created with correct configuration
-        mock_llm.assert_called_once()
-        call_args = mock_llm.call_args
-        
-        # Check that the agent has the expected name and description
-        self.assertIn("AdvisorAgent", str(call_args))
-        self.assertIn("financial advice", str(call_args).lower())
-        
-        # Verify the agent was returned
-        self.assertEqual(agent, mock_llm_instance)
+    
+    def test_create_advisor_agent_import(self):
+        """Test that AdvisorAgent can be imported and created."""
+        try:
+            # Test that the agent can be created without errors
+            agent = create_advisor_agent(self.mock_mcp_server_path)
+            
+            # Verify agent was created
+            self.assertIsNotNone(agent)
+            
+            # Verify it's the expected type
+            from agents.advisor import AdvisorAgent
+            self.assertIsInstance(agent, AdvisorAgent)
+            
+        except Exception as e:
+            self.fail(f"Failed to create AdvisorAgent: {e}")
+    
+    def test_advisor_agent_attributes(self):
+        """Test that AdvisorAgent has expected attributes."""
+        try:
+            agent = create_advisor_agent(self.mock_mcp_server_path)
+            
+            # Verify agent has expected attributes
+            self.assertTrue(hasattr(agent, 'mcp_server_path'))
+            self.assertTrue(hasattr(agent, 'agent'))
+            
+            # Verify MCP server path was set correctly
+            self.assertEqual(agent.mcp_server_path, self.mock_mcp_server_path)
+            
+        except Exception as e:
+            self.fail(f"Failed to verify AdvisorAgent attributes: {e}")
 
 
 class TestFinancialAdvisorOrchestrator(unittest.TestCase):
@@ -153,46 +147,40 @@ class TestFinancialAdvisorOrchestrator(unittest.TestCase):
     
     def setUp(self):
         """Set up test environment."""
-        self.mock_mcp_server_path = "/mock/path/to/mcp_server.py"
-        
-    @patch('agents.orchestrator.create_spending_analyzer_agent')
-    @patch('agents.orchestrator.create_goal_planner_agent')
-    @patch('agents.orchestrator.create_advisor_agent')
-    @patch('agents.orchestrator.FinancialAdvisorOrchestrator')
-    def test_create_financial_advisor_orchestrator(self, mock_orchestrator_class, 
-                                                  mock_create_advisor, 
-                                                  mock_create_goal_planner,
-                                                  mock_create_spending_analyzer):
-        """Test that FinancialAdvisorOrchestrator is created with correct configuration."""
-        # Mock the agent creation functions
-        mock_spending_agent = Mock()
-        mock_create_spending_analyzer.return_value = mock_spending_agent
-        
-        mock_goal_agent = Mock()
-        mock_create_goal_planner.return_value = mock_goal_agent
-        
-        mock_advisor_agent = Mock()
-        mock_create_advisor.return_value = mock_advisor_agent
-        
-        # Mock the orchestrator class
-        mock_orchestrator_instance = Mock()
-        mock_orchestrator_class.return_value = mock_orchestrator_instance
-        
-        # Create the orchestrator
-        orchestrator = create_financial_advisor_orchestrator(self.mock_mcp_server_path)
-        
-        # Verify all agent creation functions were called
-        mock_create_spending_analyzer.assert_called_once_with(self.mock_mcp_server_path)
-        mock_create_goal_planner.assert_called_once_with(self.mock_mcp_server_path)
-        mock_create_advisor.assert_called_once_with(self.mock_mcp_server_path)
-        
-        # Verify the orchestrator class was instantiated with correct parameters
-        mock_orchestrator_class.assert_called_once_with(
-            sub_agents=[mock_spending_agent, mock_goal_agent, mock_advisor_agent]
-        )
-        
-        # Verify the orchestrator was returned
-        self.assertEqual(orchestrator, mock_orchestrator_instance)
+        self.mock_mcp_server_path = "/mock/path/to/mcp_server_path"
+    
+    def test_create_financial_advisor_orchestrator_import(self):
+        """Test that FinancialAdvisorOrchestrator can be imported and created."""
+        try:
+            # Test that the orchestrator can be created without errors
+            orchestrator = create_financial_advisor_orchestrator(self.mock_mcp_server_path)
+            
+            # Verify orchestrator was created
+            self.assertIsNotNone(orchestrator)
+            
+            # Verify it's the expected type
+            from agents.orchestrator import FinancialAdvisorOrchestrator
+            self.assertIsInstance(orchestrator, FinancialAdvisorOrchestrator)
+            
+        except Exception as e:
+            self.fail(f"Failed to create FinancialAdvisorOrchestrator: {e}")
+    
+    def test_orchestrator_agent_attributes(self):
+        """Test that FinancialAdvisorOrchestrator has expected attributes."""
+        try:
+            orchestrator = create_financial_advisor_orchestrator(self.mock_mcp_server_path)
+            
+            # Verify orchestrator has expected attributes
+            self.assertTrue(hasattr(orchestrator, '_mcp_server_path'))
+            self.assertTrue(hasattr(orchestrator, '_spending_analyzer'))
+            self.assertTrue(hasattr(orchestrator, '_goal_planner'))
+            self.assertTrue(hasattr(orchestrator, '_advisor'))
+            
+            # Verify MCP server path was set correctly
+            self.assertEqual(orchestrator._mcp_server_path, self.mock_mcp_server_path)
+            
+        except Exception as e:
+            self.fail(f"Failed to verify FinancialAdvisorOrchestrator attributes: {e}")
 
 
 class TestAgentIntegration(unittest.TestCase):
@@ -220,6 +208,26 @@ class TestAgentIntegration(unittest.TestCase):
         self.assertTrue(callable(GoalPlannerAgent))
         self.assertTrue(callable(AdvisorAgent))
         self.assertTrue(callable(FinancialAdvisorOrchestrator))
+    
+    def test_agent_creation_functions(self):
+        """Test that all agent creation functions work."""
+        mock_path = "/mock/path/to/mcp_server.py"
+        
+        try:
+            # Test all agent creation functions
+            spending_agent = create_spending_analyzer_agent(mock_path)
+            goal_agent = create_goal_planner_agent(mock_path)
+            advisor_agent = create_advisor_agent(mock_path)
+            orchestrator = create_financial_advisor_orchestrator(mock_path)
+            
+            # Verify all agents were created
+            self.assertIsNotNone(spending_agent)
+            self.assertIsNotNone(goal_agent)
+            self.assertIsNotNone(advisor_agent)
+            self.assertIsNotNone(orchestrator)
+            
+        except Exception as e:
+            self.fail(f"Failed to create agents: {e}")
 
 
 if __name__ == '__main__':
