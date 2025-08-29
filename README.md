@@ -17,6 +17,7 @@ This application was built for an Agentic AI class to demonstrate:
 - MCP database server with 10+ tools for MySQL operations
 - Comprehensive Streamlit UI with 4 main sections
 - Database schema with sample data
+- Comprehensive test suite with 45+ test cases
 - Project structure and documentation
 
 🔄 **Functional but Mock Data:**
@@ -28,6 +29,8 @@ This application was built for an Agentic AI class to demonstrate:
 - Connect UI directly to MCP database tools for live data
 - Implement real-time agent execution in Streamlit
 - Add actual Gemini API calls with proper error handling
+- Expand test coverage with integration tests
+- Add performance testing and load testing
 
 ## 🤖 AI Agents
 
@@ -314,10 +317,15 @@ agent-ai-personal-financial-advisor/
 ├── utils/
 │   ├── database.py           # Database connection utilities
 │   └── logging_config.py     # Logging configuration
-└── tests/
-    ├── test_agents.py        # Agent tests
+└── tests/                    # Comprehensive test suite
+    ├── __init__.py
+    ├── conftest.py           # Pytest configuration & fixtures
+    ├── run_tests.py          # Test runner script
+    ├── README.md             # Testing guide
+    ├── test_agents.py        # Agent functionality tests
     ├── test_mcp_server.py    # MCP server tests
-    └── test_integration.py   # Integration tests
+    ├── test_utils.py         # Utility function tests
+    └── test_ui_components.py # UI component tests
 ```
 
 ## 🎓 Educational Value
@@ -349,6 +357,42 @@ This application demonstrates key concepts students need to master:
 2. **Documentation**: Comprehensive code comments and docstrings
 3. **Project Structure**: Modular, maintainable codebase organization
 4. **Testing Strategies**: Unit and integration testing approaches
+
+## 🧪 Testing
+
+The project includes a comprehensive test suite designed to help students learn testing best practices:
+
+### Running Tests
+
+```bash
+# Run all tests
+python tests/run_tests.py
+
+# Run specific test categories
+pytest tests/test_agents.py -v
+pytest tests/test_mcp_server.py -v
+pytest tests/test_utils.py -v
+pytest tests/test_ui_components.py -v
+
+# Run with pytest directly
+pytest tests/ -v
+```
+
+### Test Coverage
+
+- **🤖 AI Agents**: Agent creation, configuration, and tool integration
+- **🔌 MCP Server**: Database tools, error handling, and server setup
+- **🛠️ Utilities**: Database connections, logging, and configuration
+- **🎨 UI Components**: Streamlit components and visualization utilities
+- **🔗 Integration**: End-to-end functionality and data flow
+
+### Test Features
+
+- **45+ Test Cases**: Comprehensive coverage of all major components
+- **Mock Objects**: Proper isolation of external dependencies
+- **Pytest Configuration**: Professional testing setup with fixtures
+- **Educational Focus**: Tests demonstrate testing best practices
+- **Detailed Documentation**: Complete testing guide in `tests/README.md`
 
 ## 🔧 Troubleshooting
 
