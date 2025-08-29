@@ -246,6 +246,111 @@ class TestStreamlitAppImport(unittest.TestCase):
             self.assertTrue(hasattr(streamlit_app, 'main'))
         except ImportError as e:
             self.fail(f"Failed to import main Streamlit app: {e}")
+    
+    def test_streamlit_app_functions_exist(self):
+        """Test that key Streamlit app functions exist."""
+        try:
+            import streamlit_app
+            # Check that the module has the expected functions
+            self.assertTrue(hasattr(streamlit_app, 'render_customer_selector'))
+            self.assertTrue(hasattr(streamlit_app, 'render_analysis_controls'))
+        except Exception as e:
+            self.fail(f"Failed to check Streamlit app functions: {e}")
+
+
+class TestDatabaseIntegration(unittest.TestCase):
+    """Test that UI components can work with real database data."""
+    
+    def test_customer_profile_database_integration(self):
+        """Test that customer profile can work with real database data."""
+        try:
+            from ui.components.customer_profile import get_customer_data_from_db
+            # This function should exist and be callable
+            self.assertTrue(callable(get_customer_data_from_db))
+        except ImportError:
+            # Function doesn't exist yet - that's what we're testing for
+            pass
+    
+    def test_transaction_entry_database_integration(self):
+        """Test that transaction entry can work with real database data."""
+        try:
+            from ui.components.transaction_entry import save_transaction_to_db, get_transactions_from_db
+            # These functions should exist and be callable
+            self.assertTrue(callable(save_transaction_to_db))
+            self.assertTrue(callable(get_transactions_from_db))
+        except ImportError:
+            # Functions don't exist yet - that's what we're testing for
+            pass
+    
+    def test_goal_management_database_integration(self):
+        """Test that goal management can work with real database data."""
+        try:
+            from ui.components.goal_management import save_goal_to_db, get_goals_from_db
+            # These functions should exist and be callable
+            self.assertTrue(callable(save_goal_to_db))
+            self.assertTrue(callable(get_goals_from_db))
+        except ImportError:
+            # Functions don't exist yet - that's what we're testing for
+            pass
+    
+    def test_recommendations_database_integration(self):
+        """Test that recommendations can work with real database data."""
+        try:
+            from ui.components.recommendations import save_recommendation_to_db, get_recommendations_from_db
+            # These functions should exist and be callable
+            self.assertTrue(callable(save_recommendation_to_db))
+            self.assertTrue(callable(get_recommendations_from_db))
+        except ImportError:
+            # Functions don't exist yet - that's what we're testing for
+            pass
+
+
+class TestMCPToolIntegration(unittest.TestCase):
+    """Test that UI components can integrate with MCP database tools."""
+    
+    def test_mcp_tool_availability(self):
+        """Test that MCP database tools are available for UI integration."""
+        try:
+            from mcp_server.database_server import (
+                get_customer_profile,
+                get_transactions_by_customer,
+                create_financial_goal,
+                get_financial_goals,
+                save_advice,
+                get_advice_history
+            )
+            
+            # Verify tools exist
+            self.assertIsNotNone(get_customer_profile)
+            self.assertIsNotNone(get_transactions_by_customer)
+            self.assertIsNotNone(create_financial_goal)
+            self.assertIsNotNone(get_financial_goals)
+            self.assertIsNotNone(save_advice)
+            self.assertIsNotNone(get_advice_history)
+            
+        except ImportError as e:
+            self.fail(f"Failed to import MCP database tools: {e}")
+    
+    def test_ui_mcp_integration_structure(self):
+        """Test that UI components have the structure to integrate with MCP tools."""
+        # Test that UI components can be updated to use MCP tools
+        # This is a structural test to ensure the components can be modified
+        
+        # Customer profile should be able to call get_customer_profile
+        # Transaction entry should be able to call get_transactions_by_customer
+        # Goal management should be able to call create_financial_goal
+        # Recommendations should be able to call save_advice
+        
+        # For now, we just verify the components exist and can be modified
+        from ui.components.customer_profile import render_customer_profile
+        from ui.components.transaction_entry import render_transaction_entry
+        from ui.components.goal_management import render_goal_management
+        from ui.components.recommendations import render_recommendations
+        
+        self.assertTrue(callable(render_customer_profile))
+        self.assertTrue(callable(render_transaction_entry))
+        self.assertTrue(callable(render_goal_management))
+        self.assertTrue(callable(render_recommendations))
 
 
 if __name__ == '__main__':

@@ -1,26 +1,29 @@
 """
 Customer Profile component for the Streamlit UI.
 
-Displays customer information, financial overview, and key metrics.
+Displays customer information, financial overview, and charts.
 """
 
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from datetime import datetime, timedelta
-from typing import Dict, Any, Optional
+from datetime import datetime, date, timedelta
+from typing import Dict, Any, List, Optional
+import logging
+
+logger = logging.getLogger(__name__)
 
 def render_customer_profile():
-    """Render the customer profile dashboard."""
+    """Render the customer profile interface."""
     if not st.session_state.get('customer_id'):
         st.warning("No customer selected")
         return
     
     customer_id = st.session_state.customer_id
     
-    # Mock customer data (in real app, this would come from database via MCP)
-    customer_data = get_mock_customer_data(customer_id)
+    # Get customer data from database via MCP tools
+    customer_data = get_customer_data_from_db(customer_id)
     
     # Customer header
     render_customer_header(customer_data)
@@ -28,107 +31,239 @@ def render_customer_profile():
     # Financial overview
     render_financial_overview(customer_data)
     
-    # Charts and visualizations
+    # Financial charts
     render_financial_charts(customer_data)
-
-def get_mock_customer_data(customer_id: int) -> Dict[str, Any]:
-    """Get mock customer data for demonstration."""
-    customers = {
-        1: {
-            'name': 'Alice Johnson',
-            'email': 'alice.johnson@email.com',
-            'age': 39,
-            'monthly_income': 5000.0,
-            'monthly_expenses': 4200.0,
-            'savings_rate': 16.0,
-            'emergency_fund': 3000.0,
-            'total_goals': 4,
-            'goals_on_track': 3,
-            'credit_score': 750,
-            'recent_transactions': 45,
-            'spending_categories': {
-                'Housing': 1800,
-                'Food & Dining': 600,
-                'Transportation': 450,
-                'Entertainment': 200,
-                'Healthcare': 150,
-                'Other': 300
-            },
-            'monthly_trends': [
-                {'month': 'Jan', 'income': 5000, 'expenses': 4100, 'savings': 900},
-                {'month': 'Feb', 'income': 5000, 'expenses': 4200, 'savings': 800},
-                {'month': 'Mar', 'income': 5000, 'expenses': 4300, 'savings': 700},
-            ]
-        },
-        2: {
-            'name': 'Bob Smith',
-            'email': 'bob.smith@email.com', 
-            'age': 35,
-            'monthly_income': 4200.0,
-            'monthly_expenses': 3800.0,
-            'savings_rate': 9.5,
-            'emergency_fund': 1500.0,
-            'total_goals': 2,
-            'goals_on_track': 1,
-            'credit_score': 680,
-            'recent_transactions': 32,
-            'spending_categories': {
-                'Housing': 1200,
-                'Food & Dining': 400,
-                'Transportation': 300,
-                'Entertainment': 250,
-                'Healthcare': 100,
-                'Other': 250
-            },
-            'monthly_trends': [
-                {'month': 'Jan', 'income': 4200, 'expenses': 3700, 'savings': 500},
-                {'month': 'Feb', 'income': 4200, 'expenses': 3800, 'savings': 400},
-                {'month': 'Mar', 'income': 4200, 'expenses': 3900, 'savings': 300},
-            ]
-        },
-        3: {
-            'name': 'Carol Davis',
-            'email': 'carol.davis@email.com',
-            'age': 36,
-            'monthly_income': 6500.0,
-            'monthly_expenses': 5200.0,
-            'savings_rate': 20.0,
-            'emergency_fund': 8000.0,
-            'total_goals': 3,
-            'goals_on_track': 3,
-            'credit_score': 810,
-            'recent_transactions': 38,
-            'spending_categories': {
-                'Housing': 2200,
-                'Food & Dining': 800,
-                'Transportation': 600,
-                'Entertainment': 300,
-                'Healthcare': 200,
-                'Other': 400
-            },
-            'monthly_trends': [
-                {'month': 'Jan', 'income': 6500, 'expenses': 5100, 'savings': 1400},
-                {'month': 'Feb', 'income': 6500, 'expenses': 5200, 'savings': 1300},
-                {'month': 'Mar', 'income': 6500, 'expenses': 5300, 'savings': 1200},
-            ]
-        }
-    }
     
-    return customers.get(customer_id, {})
+    # Financial health score
+    render_financial_health_score(customer_data)
+
+def get_customer_data_from_db(customer_id: int) -> Dict[str, Any]:
+    """Get customer data from database via database client."""
+    try:
+        # Import the database client functions
+        from utils.database_client import (
+            get_customer_profile, get_transactions_by_customer, get_financial_goals
+        )
+        
+        # Get customer profile
+        customer_profile = get_customer_profile(customer_id)
+        
+        # Get transactions
+        transactions = get_transactions_by_customer(customer_id)
+        
+        # Get financial goals
+        goals = get_financial_goals(customer_id)
+        
+        # Calculate financial metrics
+        monthly_expenses = calculate_monthly_expenses(transactions)
+        savings_rate = calculate_savings_rate(transactions)
+        emergency_fund = calculate_emergency_fund(transactions)
+        goals_on_track = count_goals_on_track(goals)
+        spending_categories = analyze_spending_categories(transactions)
+        monthly_trends = calculate_monthly_trends(transactions)
+        
+        return {
+            'profile': customer_profile,
+            'transactions': transactions,
+            'goals': goals,
+            'monthly_income': customer_profile.get('monthly_income', 0),
+            'monthly_expenses': monthly_expenses,
+            'savings_rate': savings_rate,
+            'emergency_fund': emergency_fund,
+            'total_goals': len(goals),
+            'goals_on_track': goals_on_track,
+            'credit_score': customer_profile.get('credit_score', 0),
+            'spending_categories': spending_categories,
+            'monthly_trends': monthly_trends
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting customer data from database: {e}")
+        # Return empty data structure on error
+        return {
+            'profile': {},
+            'transactions': [],
+            'goals': [],
+            'monthly_income': 0,
+            'monthly_expenses': 0,
+            'savings_rate': 0,
+            'emergency_fund': 0,
+            'total_goals': 0,
+            'goals_on_track': 0,
+            'credit_score': 0,
+            'spending_categories': {},
+            'monthly_trends': {}
+        }
+
+def calculate_monthly_expenses(transactions: list) -> float:
+    """Calculate monthly expenses from transactions."""
+    if not transactions:
+        return 0.0
+    
+    # Get current month
+    current_month = datetime.now().month
+    current_year = datetime.now().year
+    
+    monthly_expenses = 0.0
+    for transaction in transactions:
+        if transaction.get('transaction_type') == 'expense':
+            # Parse transaction date - handle both string and date objects
+            trans_date = transaction.get('transaction_date')
+            try:
+                if isinstance(trans_date, str):
+                    parsed_date = datetime.strptime(trans_date, '%Y-%m-%d')
+                elif isinstance(trans_date, date):
+                    parsed_date = datetime.combine(trans_date, datetime.min.time())
+                elif hasattr(trans_date, 'date'):
+                    parsed_date = datetime.combine(trans_date.date(), datetime.min.time())
+                else:
+                    continue
+                
+                if parsed_date.month == current_month and parsed_date.year == current_year:
+                    monthly_expenses += float(transaction.get('amount', 0))
+            except (ValueError, TypeError, AttributeError):
+                continue
+    
+    return monthly_expenses
+
+def calculate_savings_rate(transactions: list) -> float:
+    """Calculate savings rate from transactions."""
+    if not transactions:
+        return 0.0
+    
+    # Get current month
+    current_month = datetime.now().month
+    current_year = datetime.now().year
+    
+    monthly_income = 0.0
+    monthly_expenses = 0.0
+    
+    for transaction in transactions:
+        try:
+            trans_date = transaction.get('transaction_date')
+            if isinstance(trans_date, str):
+                parsed_date = datetime.strptime(trans_date, '%Y-%m-%d')
+            elif isinstance(trans_date, date):
+                parsed_date = datetime.combine(trans_date, datetime.min.time())
+            elif hasattr(trans_date, 'date'):
+                parsed_date = datetime.combine(trans_date.date(), datetime.min.time())
+            else:
+                continue
+            
+            if parsed_date.month == current_month and parsed_date.year == current_year:
+                if transaction.get('transaction_type') == 'income':
+                    monthly_income += float(transaction.get('amount', 0))
+                elif transaction.get('transaction_type') == 'expense':
+                    monthly_expenses += float(transaction.get('amount', 0))
+        except (ValueError, TypeError, AttributeError):
+            continue
+    
+    if monthly_income <= 0:
+        return 0.0
+    
+    savings = monthly_income - monthly_expenses
+    return (savings / monthly_income) * 100
+
+def calculate_emergency_fund(transactions: list) -> float:
+    """Calculate emergency fund from transactions."""
+    if not transactions:
+        return 0.0
+    
+    # Look for emergency fund transactions (savings type)
+    emergency_fund = 0.0
+    for transaction in transactions:
+        if (transaction.get('transaction_type') == 'income' and 
+            transaction.get('category') == 'Savings & Investment'):
+            emergency_fund += transaction.get('amount', 0)
+    
+    return emergency_fund
+
+def count_goals_on_track(goals: list) -> int:
+    """Count goals that are on track."""
+    on_track = 0
+    for goal in goals:
+        current = goal.get('current_amount', 0)
+        target = goal.get('target_amount', 0)
+        if target > 0 and (current / target) >= 0.8:  # 80% or more complete
+            on_track += 1
+    return on_track
+
+def analyze_spending_categories(transactions: list) -> Dict[str, float]:
+    """Analyze spending by category."""
+    categories = {}
+    
+    for transaction in transactions:
+        if transaction.get('transaction_type') == 'expense':
+            category = transaction.get('category', 'Other')
+            amount = transaction.get('amount', 0)
+            categories[category] = categories.get(category, 0) + amount
+    
+    return categories
+
+def calculate_monthly_trends(transactions: list) -> list:
+    """Calculate monthly income/expense trends."""
+    trends = []
+    
+    # Get last 6 months with proper month boundaries
+    current_date = datetime.now()
+    
+    for i in range(6):
+        # Calculate month date by subtracting months, not days
+        if current_date.month - i <= 0:
+            year = current_date.year - 1
+            month = 12 + (current_date.month - i)
+        else:
+            year = current_date.year
+            month = current_date.month - i
+        
+        month_name = datetime(year, month, 1).strftime('%b %Y')
+        
+        month_income = 0.0
+        month_expenses = 0.0
+        
+        for transaction in transactions:
+            try:
+                trans_date = transaction.get('transaction_date')
+                if isinstance(trans_date, str):
+                    parsed_date = datetime.strptime(trans_date, '%Y-%m-%d')
+                elif isinstance(trans_date, date):
+                    parsed_date = datetime.combine(trans_date, datetime.min.time())
+                elif hasattr(trans_date, 'date'):
+                    parsed_date = datetime.combine(trans_date.date(), datetime.min.time())
+                else:
+                    continue
+                
+                # Check if transaction is in the current month/year
+                if parsed_date.month == month and parsed_date.year == year:
+                    if transaction.get('transaction_type') == 'income':
+                        month_income += float(transaction.get('amount', 0))
+                    elif transaction.get('transaction_type') == 'expense':
+                        month_expenses += float(transaction.get('amount', 0))
+            except (ValueError, TypeError, AttributeError):
+                continue
+        
+        trends.append({
+            'month': month_name,
+            'income': month_income,
+            'expenses': month_expenses,
+            'savings': month_income - month_expenses
+        })
+    
+    return trends[::-1]  # Reverse to show oldest first
 
 def render_customer_header(customer_data: Dict[str, Any]):
     """Render customer header information."""
     col1, col2, col3 = st.columns([2, 1, 1])
     
     with col1:
-        st.markdown(f"## 👤 {customer_data.get('name', 'Unknown')}")
-        st.markdown(f"**Email:** {customer_data.get('email', 'N/A')}")
-        st.markdown(f"**Age:** {customer_data.get('age', 'N/A')}")
+        st.markdown(f"## 👤 {customer_data.get('profile', {}).get('name', 'Unknown')}")
+        st.markdown(f"**Email:** {customer_data.get('profile', {}).get('email', 'N/A')}")
+        st.markdown(f"**Age:** {customer_data.get('profile', {}).get('age', 'N/A')}")
     
     with col2:
         st.metric(
             label="💰 Monthly Income",
-            value=f"${customer_data.get('monthly_income', 0):,.0f}",
+            value=f"${float(customer_data.get('monthly_income', 0)):,.0f}",
             help="Total monthly income"
         )
     
@@ -143,9 +278,9 @@ def render_financial_overview(customer_data: Dict[str, Any]):
     """Render financial overview metrics."""
     st.markdown("### 📊 Financial Overview")
     
-    # Calculate key metrics
-    monthly_income = customer_data.get('monthly_income', 0)
-    monthly_expenses = customer_data.get('monthly_expenses', 0)
+    # Calculate key metrics - convert Decimal to float
+    monthly_income = float(customer_data.get('monthly_income', 0))
+    monthly_expenses = float(customer_data.get('monthly_expenses', 0))
     monthly_savings = monthly_income - monthly_expenses
     savings_rate = (monthly_savings / monthly_income * 100) if monthly_income > 0 else 0
     
@@ -186,7 +321,7 @@ def render_financial_overview(customer_data: Dict[str, Any]):
         )
     
     with col5:
-        emergency_fund = customer_data.get('emergency_fund', 0)
+        emergency_fund = float(customer_data.get('emergency_fund', 0))
         months_covered = emergency_fund / monthly_expenses if monthly_expenses > 0 else 0
         st.metric(
             label="🏦 Emergency Fund",

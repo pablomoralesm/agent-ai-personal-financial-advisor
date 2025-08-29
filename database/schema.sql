@@ -12,6 +12,9 @@ CREATE TABLE IF NOT EXISTS customers (
     email VARCHAR(255) UNIQUE,
     phone VARCHAR(50),
     date_of_birth DATE,
+    age INT,
+    monthly_income DECIMAL(12,2) DEFAULT 0.00,
+    credit_score INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -62,6 +65,7 @@ CREATE TABLE IF NOT EXISTS advice_history (
     agent_name VARCHAR(100) NOT NULL,
     advice_type VARCHAR(100) NOT NULL, -- 'spending_analysis', 'goal_planning', 'general_advice'
     advice_content TEXT NOT NULL,
+    advice_text TEXT, -- Alternative field name for compatibility
     confidence_score DECIMAL(3,2), -- 0.00 to 1.00
     metadata JSON, -- Additional structured data from agents
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

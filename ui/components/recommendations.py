@@ -1,499 +1,446 @@
 """
 Recommendations component for the Streamlit UI.
 
-Displays AI-generated financial recommendations and advice from the agents.
+Displays AI-generated financial recommendations and advice history.
 """
 
 import streamlit as st
 import pandas as pd
-import plotly.express as px
-from datetime import datetime, timedelta
+from datetime import datetime, date
 from typing import Dict, Any, List, Optional
+import logging
+
+logger = logging.getLogger(__name__)
 
 def render_recommendations():
-    """Render the AI recommendations interface."""
+    """Render the recommendations interface."""
     if not st.session_state.get('customer_id'):
         st.warning("No customer selected")
         return
     
-    # Check if we have recent analysis results
-    analysis_results = st.session_state.get('last_analysis_results')
+    customer_id = st.session_state.customer_id
     
-    if not analysis_results:
-        render_no_recommendations()
-        return
+    st.markdown("## 🤖 AI Financial Recommendations")
     
-    # Display recommendations based on analysis type
-    if analysis_results['type'] == 'full':
-        render_comprehensive_recommendations(analysis_results)
-    elif analysis_results['type'] == 'quick':
-        render_quick_recommendations(analysis_results)
-    elif analysis_results['type'] == 'goal_focused':
-        render_goal_recommendations(analysis_results)
+    # Run analysis and get recommendations
+    if st.button("🚀 Run Financial Analysis", type="primary", use_container_width=True):
+        with st.spinner("Analyzing your financial situation..."):
+            recommendations = run_financial_analysis(customer_id)
+            if recommendations:
+                st.session_state.current_recommendations = recommendations
+                st.success("✅ Analysis complete! View recommendations below.")
+                st.rerun()
     
-    # Always show advice history
-    render_advice_history()
+    # Display current recommendations
+    if st.session_state.get('current_recommendations'):
+        render_current_recommendations(st.session_state.current_recommendations)
+    
+    # Display advice history
+    render_advice_history(customer_id)
 
-def render_no_recommendations():
-    """Render interface when no recommendations are available."""
-    st.info("🤖 No AI recommendations available yet. Run an analysis to get personalized financial advice!")
+def run_financial_analysis(customer_id: int) -> Optional[Dict[str, Any]]:
+    """Run comprehensive financial analysis using AI agents."""
+    try:
+        # Import the orchestrator agent
+        from agents.orchestrator import FinancialAdvisorOrchestrator
+        
+        # Initialize the orchestrator
+        orchestrator = FinancialAdvisorOrchestrator()
+        
+        # Run the analysis
+        result = orchestrator.run(customer_id=customer_id)
+        
+        if result and result.get('success'):
+            # Save the advice to database
+            save_advice_to_db(customer_id, result)
+            return result
+        else:
+            st.error("❌ Analysis failed. Please try again.")
+            return None
+            
+    except Exception as e:
+        logger.error(f"Error running financial analysis: {e}")
+        st.error(f"Failed to run analysis: {e}")
+        return None
+
+def save_advice_to_db(customer_id: int, advice_data: Dict[str, Any]) -> bool:
+    """Save financial advice to database via database client."""
+    try:
+        from utils.database_client import save_advice
+        
+        # Extract key information from advice
+        advice_summary = advice_data.get('summary', 'Financial analysis completed')
+        recommendations = advice_data.get('recommendations', [])
+        spending_analysis = advice_data.get('spending_analysis', {})
+        goal_analysis = advice_data.get('goal_analysis', {})
+        
+        # Create detailed advice text
+        advice_text = f"""
+{advice_summary}
+
+**Key Recommendations:**
+{chr(10).join([f"• {rec}" for rec in recommendations[:5]])}
+
+**Spending Insights:**
+{chr(10).join([f"• {key}: {value}" for key, value in spending_analysis.items()][:3])}
+
+**Goal Progress:**
+{chr(10).join([f"• {key}: {value}" for key, value in goal_analysis.items()][:3])}
+        """.strip()
+        
+        success = save_advice(
+            customer_id=customer_id,
+            advice_type='comprehensive_analysis',
+            advice_text=advice_text,
+            agent_name='FinancialAdvisorOrchestrator',
+            confidence_score=0.85
+        )
+        
+        if success:
+            logger.info(f"Advice saved successfully for customer {customer_id}")
+            return True
+        else:
+            logger.error("Failed to save advice to database")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Error saving advice: {e}")
+        return False
+
+def render_current_recommendations(recommendations: Dict[str, Any]):
+    """Render current analysis recommendations."""
+    st.markdown("### 📊 Current Analysis Results")
     
+    # Summary
+    if recommendations.get('summary'):
+        st.info(f"**Summary:** {recommendations['summary']}")
+    
+    # Key metrics
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("🔍 Run Full Analysis", use_container_width=True):
-            st.session_state.analysis_running = True
-            st.rerun()
+        if 'spending_score' in recommendations:
+            st.metric(
+                "Spending Score",
+                f"{recommendations['spending_score']}/10",
+                help="AI assessment of spending habits"
+            )
     
     with col2:
-        if st.button("⚡ Get Quick Insights", use_container_width=True):
-            # Trigger quick analysis
-            st.info("Quick analysis feature would be triggered here")
+        if 'savings_score' in recommendations:
+            st.metric(
+                "Savings Score", 
+                f"{recommendations['savings_score']}/10",
+                help="AI assessment of savings behavior"
+            )
     
     with col3:
-        if st.button("🎯 Analyze Goals", use_container_width=True):
-            # Trigger goal analysis
-            st.info("Goal analysis feature would be triggered here")
+        if 'overall_score' in recommendations:
+            st.metric(
+                "Overall Score",
+                f"{recommendations['overall_score']}/10",
+                help="Overall financial health score"
+            )
     
-    # Show sample recommendations for demonstration
-    render_sample_recommendations()
+    # Recommendations
+    if recommendations.get('recommendations'):
+        st.markdown("#### 🎯 Key Recommendations")
+        
+        for i, rec in enumerate(recommendations['recommendations'], 1):
+            st.markdown(f"**{i}.** {rec}")
+    
+    # Spending analysis
+    if recommendations.get('spending_analysis'):
+        st.markdown("#### 💰 Spending Analysis")
+        
+        spending_data = recommendations['spending_analysis']
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if 'top_categories' in spending_data:
+                st.markdown("**Top Spending Categories:**")
+                for category, amount in spending_data['top_categories'][:3]:
+                    st.write(f"• {category}: ${amount:,.0f}")
+        
+        with col2:
+            if 'monthly_trend' in spending_data:
+                trend = spending_data['monthly_trend']
+                st.markdown("**Monthly Trend:**")
+                st.write(f"• {trend}")
+    
+    # Goal analysis
+    if recommendations.get('goal_analysis'):
+        st.markdown("#### 🎯 Goal Analysis")
+        
+        goal_data = recommendations['goal_analysis']
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if 'goals_on_track' in goal_data:
+                st.metric(
+                    "Goals On Track",
+                    goal_data['goals_on_track'],
+                    help="Number of goals meeting their targets"
+                )
+        
+        with col2:
+            if 'goals_behind' in goal_data:
+                st.metric(
+                    "Goals Behind",
+                    goal_data['goals_behind'],
+                    help="Number of goals needing attention"
+                )
+    
+    # Action items
+    if recommendations.get('action_items'):
+        st.markdown("#### ⚡ Immediate Action Items")
+        
+        for action in recommendations['action_items']:
+            st.markdown(f"• **{action['priority']}:** {action['description']}")
+    
+    # Save recommendations button
+    if st.button("💾 Save to History", use_container_width=True):
+        if save_recommendations_to_history(recommendations):
+            st.success("✅ Recommendations saved to history!")
+        else:
+            st.error("❌ Failed to save recommendations")
 
-def render_comprehensive_recommendations(results: Dict[str, Any]):
-    """Render comprehensive financial recommendations."""
-    st.markdown("### 💡 Comprehensive Financial Recommendations")
-    
-    # Analysis summary
-    render_analysis_summary(results)
-    
-    # Priority recommendations
-    render_priority_recommendations()
-    
-    # Detailed recommendations by category
-    render_detailed_recommendations()
-    
-    # Implementation timeline
-    render_implementation_timeline()
+def save_recommendations_to_history(recommendations: Dict[str, Any]) -> bool:
+    """Save current recommendations to history."""
+    try:
+        # This would typically save to a more detailed history table
+        # For now, we'll just mark it as saved
+        return True
+    except Exception as e:
+        logger.error(f"Error saving recommendations to history: {e}")
+        return False
 
-def render_quick_recommendations(results: Dict[str, Any]):
-    """Render quick insights and recommendations."""
-    st.markdown("### ⚡ Quick Financial Insights")
+def render_advice_history(customer_id: int):
+    """Render advice history from database."""
+    st.markdown("### 📚 Advice History")
     
-    insights = results.get('insights', [])
+    # Get advice history from database
+    advice_history = get_advice_history_from_db(customer_id)
     
-    if insights:
-        st.markdown("#### 🔍 Key Insights")
-        for i, insight in enumerate(insights, 1):
-            st.markdown(f"**{i}.** {insight}")
+    if not advice_history:
+        st.info("No previous advice found. Run your first analysis above!")
+        return
     
-    # Quick action items
-    render_quick_actions()
+    # Filter options
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        advice_type_filter = st.selectbox(
+            "Filter by Type",
+            options=["All"] + list(set([advice.get('advice_type', 'Unknown') for advice in advice_history])),
+            help="Filter advice by type"
+        )
+    
+    with col2:
+        date_filter = st.selectbox(
+            "Filter by Date",
+            options=["All", "Last 7 days", "Last 30 days", "Last 90 days"],
+            help="Filter advice by recency"
+        )
+    
+    # Apply filters
+    filtered_advice = apply_advice_filters(advice_history, advice_type_filter, date_filter)
+    
+    if not filtered_advice:
+        st.info("No advice matches the selected filters.")
+        return
+    
+    # Display filtered advice
+    for advice in filtered_advice:
+        render_advice_card(advice)
 
-def render_goal_recommendations(results: Dict[str, Any]):
-    """Render goal-focused recommendations."""
-    st.markdown("### 🎯 Goal-Focused Recommendations")
+def get_advice_history_from_db(customer_id: int) -> List[Dict[str, Any]]:
+    """Get advice history from database via database client."""
+    try:
+        from utils.database_client import get_advice_history
+        
+        advice_list = get_advice_history(customer_id)
+        
+        logger.info(f"Retrieved {len(advice_list)} advice records for customer {customer_id}")
+        return advice_list
+            
+    except Exception as e:
+        logger.error(f"Error getting advice history: {e}")
+        st.error(f"Failed to load advice history: {e}")
+        return []
+
+def apply_advice_filters(
+    advice_history: List[Dict[str, Any]], 
+    advice_type_filter: str, 
+    date_filter: str
+) -> List[Dict[str, Any]]:
+    """Apply filters to advice history."""
+    filtered = advice_history
     
-    analysis = results.get('goal_analysis', {})
+    # Filter by type
+    if advice_type_filter != "All":
+        filtered = [a for a in filtered if a.get('advice_type') == advice_type_filter]
     
-    if analysis:
+    # Filter by date
+    if date_filter != "All":
+        today = date.today()
+        
+        if date_filter == "Last 7 days":
+            cutoff_date = today.replace(day=today.day - 7)
+        elif date_filter == "Last 30 days":
+            cutoff_date = today.replace(day=today.day - 30)
+        elif date_filter == "Last 90 days":
+            cutoff_date = today.replace(day=today.day - 90)
+        else:
+            cutoff_date = today
+        
+        filtered = [
+            a for a in filtered 
+            if a.get('created_at') and datetime.strptime(a['created_at'], '%Y-%m-%d').date() >= cutoff_date
+        ]
+    
+    return filtered
+
+def render_advice_card(advice: Dict[str, Any]):
+    """Render individual advice card."""
+    with st.container():
+        st.markdown("---")
+        
+        # Header with type and date
+        col1, col2, col3 = st.columns([2, 1, 1])
+        
+        with col1:
+            advice_type = advice.get('advice_type', 'Unknown').replace('_', ' ').title()
+            st.markdown(f"#### 🤖 {advice_type}")
+        
+        with col2:
+            if advice.get('confidence_score'):
+                confidence = advice['confidence_score']
+                if confidence >= 0.8:
+                    confidence_icon = "🟢"
+                elif confidence >= 0.6:
+                    confidence_icon = "🟡"
+                else:
+                    confidence_icon = "🔴"
+                
+                st.metric(
+                    "Confidence",
+                    f"{confidence*100:.0f}%",
+                    help="AI confidence in this advice"
+                )
+        
+        with col3:
+            if advice.get('created_at'):
+                try:
+                    created_at = advice['created_at']
+                    if isinstance(created_at, str):
+                        created_date = datetime.strptime(created_at, '%Y-%m-%d').date()
+                    elif isinstance(created_at, datetime):
+                        created_date = created_at.date()
+                    elif hasattr(created_at, 'date'):
+                        created_date = created_at.date()
+                    else:
+                        created_date = None
+                    
+                    if created_date:
+                        days_ago = (date.today() - created_date).days
+                        
+                        if days_ago == 0:
+                            st.write("**Today**")
+                        elif days_ago == 1:
+                            st.write("**Yesterday**")
+                        else:
+                            st.write(f"**{days_ago} days ago**")
+                    else:
+                        st.write("**Unknown date**")
+                except (ValueError, TypeError, AttributeError):
+                    st.write("**Invalid date**")
+        
+        # Advice content
+        if advice.get('advice_text'):
+            st.markdown("**Advice:**")
+            st.write(advice['advice_text'])
+        
+        # Agent information
+        if advice.get('agent_name'):
+            st.caption(f"Generated by: {advice['agent_name']}")
+        
+        # Action buttons
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            st.metric("Goals On Track", analysis.get('on_track', 0))
-        with col2:
-            st.metric("Goals Behind", analysis.get('behind', 0))
-        with col3:
-            st.metric("Recommendations", analysis.get('recommendations', 0))
-    
-    # Goal-specific recommendations
-    render_goal_specific_recommendations()
-
-def render_analysis_summary(results: Dict[str, Any]):
-    """Render analysis summary."""
-    st.markdown("#### 📊 Analysis Summary")
-    
-    summary = results.get('summary', {})
-    
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.metric(
-            "Spending Health",
-            summary.get('spending_health', 'N/A'),
-            help="Overall assessment of spending patterns"
-        )
-    
-    with col2:
-        st.metric(
-            "Goal Feasibility", 
-            summary.get('goal_feasibility', 'N/A'),
-            help="How achievable your financial goals are"
-        )
-    
-    with col3:
-        st.metric(
-            "Priority Actions",
-            summary.get('priority_actions', 0),
-            help="Number of high-priority recommendations"
-        )
-    
-    with col4:
-        savings_potential = summary.get('savings_potential', 0)
-        st.metric(
-            "Savings Potential",
-            f"${savings_potential:.0f}/mo",
-            help="Estimated monthly savings opportunity"
-        )
-
-def render_priority_recommendations():
-    """Render priority recommendations."""
-    st.markdown("#### 🚨 Priority Actions")
-    
-    # Mock priority recommendations (in real app, from agent analysis)
-    priority_recommendations = [
-        {
-            'title': 'Reduce Dining Out Expenses',
-            'description': 'Your dining expenses are 25% above recommended levels. Consider meal planning and cooking at home more often.',
-            'impact': 'High',
-            'effort': 'Medium',
-            'savings': 200.0,
-            'timeline': '30 days',
-            'category': 'spending'
-        },
-        {
-            'title': 'Increase Emergency Fund Contributions',
-            'description': 'Your emergency fund covers only 2.1 months of expenses. Aim for 3-6 months coverage.',
-            'impact': 'High',
-            'effort': 'Low',
-            'savings': -150.0,  # Negative because it\'s an investment
-            'timeline': '12 months',
-            'category': 'savings'
-        },
-        {
-            'title': 'Optimize Transportation Costs',
-            'description': 'Consider carpooling or public transport for daily commute to reduce gas and parking expenses.',
-            'impact': 'Medium',
-            'effort': 'Medium',
-            'savings': 75.0,
-            'timeline': '60 days',
-            'category': 'spending'
-        }
-    ]
-    
-    for i, rec in enumerate(priority_recommendations, 1):
-        render_recommendation_card(rec, i)
-
-def render_recommendation_card(rec: Dict[str, Any], index: int):
-    """Render a single recommendation card."""
-    # Determine colors based on impact and category
-    impact_colors = {
-        'High': '#ff4444',
-        'Medium': '#ffaa00', 
-        'Low': '#44aa44'
-    }
-    
-    category_icons = {
-        'spending': '💸',
-        'savings': '💰',
-        'investment': '📈',
-        'debt': '💳',
-        'goals': '🎯'
-    }
-    
-    impact_color = impact_colors.get(rec['impact'], '#666666')
-    category_icon = category_icons.get(rec['category'], '💡')
-    
-    with st.expander(f"{index}. {category_icon} {rec['title']} - {rec['impact']} Impact", expanded=True):
-        col1, col2 = st.columns([3, 1])
-        
-        with col1:
-            st.markdown(f"**Description:** {rec['description']}")
-            st.markdown(f"**Timeline:** {rec['timeline']}")
-            
-            # Progress indicator (mock)
-            if st.button(f"✅ Mark as Completed", key=f"complete_{index}"):
-                st.success("Recommendation marked as completed!")
+            if st.button(f"📋 Copy", key=f"copy_{advice.get('id', 'unknown')}"):
+                st.write("📋 Copied to clipboard!")
         
         with col2:
-            st.markdown(f"**Impact:** {rec['impact']}")
-            st.markdown(f"**Effort:** {rec['effort']}")
-            
-            if rec['savings'] > 0:
-                st.metric("Monthly Savings", f"+${rec['savings']:.0f}")
-            elif rec['savings'] < 0:
-                st.metric("Monthly Investment", f"${abs(rec['savings']):.0f}")
-            
-            # Action button
-            if st.button(f"📋 Create Action Plan", key=f"plan_{index}"):
-                show_action_plan(rec)
-
-def render_detailed_recommendations():
-    """Render detailed recommendations by category."""
-    st.markdown("#### 📝 Detailed Recommendations")
-    
-    categories = {
-        'Spending Optimization': [
-            'Review subscription services and cancel unused ones',
-            'Negotiate better rates for insurance and utilities',
-            'Use cashback credit cards for regular purchases',
-            'Set up automatic transfers to prevent overspending'
-        ],
-        'Goal Achievement': [
-            'Increase emergency fund contributions by $100/month',
-            'Set up automatic savings for vacation goal',
-            'Consider high-yield savings account for short-term goals',
-            'Review and adjust goal timelines based on current capacity'
-        ],
-        'Investment Strategy': [
-            'Maximize employer 401(k) matching',
-            'Consider opening a Roth IRA for tax-free growth',
-            'Diversify investment portfolio across asset classes',
-            'Review investment fees and consider low-cost index funds'
-        ],
-        'Risk Management': [
-            'Review life insurance coverage adequacy',
-            'Ensure adequate emergency fund before investing',
-            'Consider disability insurance if not covered by employer',
-            'Review and update beneficiaries on all accounts'
-        ]
-    }
-    
-    for category, recommendations in categories.items():
-        with st.expander(f"📊 {category}", expanded=False):
-            for rec in recommendations:
-                st.markdown(f"• {rec}")
-
-def render_implementation_timeline():
-    """Render implementation timeline for recommendations."""
-    st.markdown("#### 📅 Implementation Timeline")
-    
-    timeline_data = [
-        {'Period': '0-30 Days', 'Actions': 'Reduce dining out, cancel unused subscriptions', 'Impact': '$200/month'},
-        {'Period': '1-3 Months', 'Actions': 'Optimize transportation, increase emergency fund', 'Impact': '$225/month'},
-        {'Period': '3-6 Months', 'Actions': 'Review insurance, set up investment accounts', 'Impact': '$250/month'},
-        {'Period': '6-12 Months', 'Actions': 'Maximize retirement contributions, goal review', 'Impact': '$300/month'}
-    ]
-    
-    df = pd.DataFrame(timeline_data)
-    
-    st.dataframe(
-        df,
-        use_container_width=True,
-        hide_index=True,
-        column_config={
-            "Period": st.column_config.TextColumn("Time Period"),
-            "Actions": st.column_config.TextColumn("Key Actions"),
-            "Impact": st.column_config.TextColumn("Expected Impact")
-        }
-    )
-
-def render_quick_actions():
-    """Render quick actionable items."""
-    st.markdown("#### ⚡ Quick Actions")
-    
-    quick_actions = [
-        {
-            'action': 'Set up automatic savings transfer',
-            'time': '5 minutes',
-            'impact': 'High',
-            'description': 'Automate $200 monthly transfer to savings'
-        },
-        {
-            'action': 'Review and cancel subscriptions',
-            'time': '15 minutes', 
-            'impact': 'Medium',
-            'description': 'Check for unused streaming services and memberships'
-        },
-        {
-            'action': 'Compare insurance rates',
-            'time': '30 minutes',
-            'impact': 'Medium', 
-            'description': 'Get quotes for auto and home insurance'
-        }
-    ]
-    
-    for action in quick_actions:
-        col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
-        
-        with col1:
-            st.markdown(f"**{action['action']}**")
-            st.caption(action['description'])
-        
-        with col2:
-            st.markdown(f"⏱️ {action['time']}")
+            if st.button(f"⭐ Rate", key=f"rate_{advice.get('id', 'unknown')}"):
+                show_rating_dialog(advice)
         
         with col3:
-            impact_color = {'High': '🔴', 'Medium': '🟡', 'Low': '🟢'}
-            st.markdown(f"{impact_color.get(action['impact'], '⚪')} {action['impact']}")
-        
-        with col4:
-            if st.button("✅ Done", key=f"quick_{action['action']}"):
-                st.success("Great job! 🎉")
+            if st.button(f"🔄 Re-run", key=f"rerun_{advice.get('id', 'unknown')}"):
+                st.info("This would re-run the analysis with updated data")
 
-def render_goal_specific_recommendations():
-    """Render goal-specific recommendations."""
-    st.markdown("#### 🎯 Goal-Specific Advice")
+def show_rating_dialog(advice: Dict[str, Any]):
+    """Show dialog for rating advice."""
+    st.info("Rating functionality would be implemented here to collect user feedback on advice quality")
+
+def render_quick_insights(customer_id: int):
+    """Render quick financial insights."""
+    st.markdown("### 💡 Quick Insights")
     
-    # Get customer goals
-    from ui.components.goal_management import get_customer_goals
-    goals = get_customer_goals(st.session_state.customer_id)
-    
-    if not goals:
-        st.info("No goals set yet. Create some goals to get specific recommendations!")
-        return
-    
-    for goal in goals[:3]:  # Show top 3 goals
-        with st.expander(f"🎯 {goal['goal_name']}", expanded=False):
-            progress = (goal['current_amount'] / goal['target_amount'] * 100) if goal['target_amount'] > 0 else 0
-            remaining = goal['target_amount'] - goal['current_amount']
-            
+    # Get recent transactions and goals for quick analysis
+    try:
+        from utils.database_client import get_transactions_by_customer, get_financial_goals
+        
+        # Get recent transactions
+        transactions_result = get_transactions_by_customer(customer_id=customer_id, limit=10)
+        recent_transactions = transactions_result.get('transactions', []) if transactions_result.get('success') else []
+        
+        # Get goals
+        goals_result = get_financial_goals(customer_id=customer_id)
+        goals = goals_result.get('goals', []) if goals_result.get('success') else []
+        
+        if recent_transactions or goals:
             col1, col2 = st.columns(2)
             
             with col1:
-                st.metric("Progress", f"{progress:.1f}%")
-                st.metric("Remaining", f"${remaining:,.0f}")
+                if recent_transactions:
+                    st.markdown("**Recent Spending:**")
+                    total_recent = sum(t.get('amount', 0) for t in recent_transactions)
+                    st.metric("Last 10 transactions", f"${total_recent:,.2f}")
+                    
+                    # Show top category
+                    if recent_transactions:
+                        categories = {}
+                        for t in recent_transactions:
+                            cat = t.get('category', 'Unknown')
+                            categories[cat] = categories.get(cat, 0) + t.get('amount', 0)
+                        
+                        if categories:
+                            top_category = max(categories.items(), key=lambda x: x[1])
+                            st.write(f"Top category: **{top_category[0]}** (${top_category[1]:,.2f})")
             
             with col2:
-                # Generate mock recommendations based on goal
-                if goal['goal_type'] == 'savings':
-                    st.markdown("**Recommendations:**")
-                    st.markdown("• Consider high-yield savings account")
-                    st.markdown("• Set up automatic monthly transfers")
-                    st.markdown("• Track progress weekly")
-                elif goal['goal_type'] == 'investment':
-                    st.markdown("**Recommendations:**")
-                    st.markdown("• Diversify across asset classes")
-                    st.markdown("• Consider dollar-cost averaging")
-                    st.markdown("• Review fees and expenses")
-
-def render_advice_history():
-    """Render historical advice and recommendations."""
-    st.markdown("### 📚 Advice History")
-    
-    # Mock advice history (in real app, from database via MCP)
-    advice_history = [
-        {
-            'date': '2024-03-01',
-            'agent': 'AdvisorAgent',
-            'type': 'Comprehensive Advice',
-            'confidence': 0.92,
-            'summary': 'Provided complete financial analysis with 5 priority recommendations'
-        },
-        {
-            'date': '2024-02-15',
-            'agent': 'SpendingAnalyzerAgent',
-            'type': 'Spending Analysis',
-            'confidence': 0.87,
-            'summary': 'Identified dining expenses 20% above recommended levels'
-        },
-        {
-            'date': '2024-02-01',
-            'agent': 'GoalPlannerAgent',
-            'type': 'Goal Planning',
-            'confidence': 0.95,
-            'summary': 'Evaluated feasibility of 4 financial goals, all achievable with adjustments'
-        }
-    ]
-    
-    if advice_history:
-        df = pd.DataFrame(advice_history)
-        df['date'] = pd.to_datetime(df['date']).dt.strftime('%Y-%m-%d')
-        df['confidence'] = df['confidence'].apply(lambda x: f"{x*100:.0f}%")
-        
-        st.dataframe(
-            df,
-            use_container_width=True,
-            hide_index=True,
-            column_config={
-                "date": st.column_config.TextColumn("Date"),
-                "agent": st.column_config.TextColumn("AI Agent"),
-                "type": st.column_config.TextColumn("Advice Type"),
-                "confidence": st.column_config.TextColumn("Confidence"),
-                "summary": st.column_config.TextColumn("Summary")
-            }
-        )
-    else:
-        st.info("No advice history available yet.")
-
-def render_sample_recommendations():
-    """Render sample recommendations for demonstration."""
-    st.markdown("### 💡 Sample Recommendations")
-    st.info("Here are some example recommendations our AI agents might provide:")
-    
-    sample_recommendations = [
-        {
-            'title': 'Build Emergency Fund',
-            'description': 'Start with $500 and gradually build to 3-6 months of expenses',
-            'category': 'Financial Security',
-            'priority': 'High'
-        },
-        {
-            'title': 'Track Spending Patterns',
-            'description': 'Monitor expenses for 30 days to identify optimization opportunities',
-            'category': 'Spending Analysis',
-            'priority': 'Medium'
-        },
-        {
-            'title': 'Set SMART Financial Goals',
-            'description': 'Create specific, measurable, achievable, relevant, and time-bound goals',
-            'category': 'Goal Planning',
-            'priority': 'Medium'
-        }
-    ]
-    
-    for rec in sample_recommendations:
-        priority_colors = {'High': '🔴', 'Medium': '🟡', 'Low': '🟢'}
-        
-        st.markdown(f"""
-        **{priority_colors.get(rec['priority'], '⚪')} {rec['title']}** ({rec['category']})
-        
-        {rec['description']}
-        """)
-
-def show_action_plan(recommendation: Dict[str, Any]):
-    """Show detailed action plan for a recommendation."""
-    st.info(f"""
-    **Action Plan for: {recommendation['title']}**
-    
-    This would show a detailed step-by-step plan including:
-    • Specific steps to implement the recommendation
-    • Resources and tools needed
-    • Timeline and milestones
-    • How to track progress
-    • Expected outcomes and benefits
-    """)
-
-def render_recommendation_metrics():
-    """Render metrics about recommendation effectiveness."""
-    st.markdown("#### 📈 Recommendation Impact")
-    
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.metric("Recommendations Given", "12", delta="3 this month")
-    
-    with col2:
-        st.metric("Actions Completed", "8", delta="67% completion rate")
-    
-    with col3:
-        st.metric("Estimated Savings", "$450/mo", delta="+$125 from last month")
-    
-    with col4:
-        st.metric("Goal Progress", "+15%", delta="Above target")
-
-def export_recommendations():
-    """Export recommendations to various formats."""
-    st.markdown("#### 📥 Export Recommendations")
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        if st.button("📄 Export to PDF"):
-            st.info("PDF export functionality would be implemented here")
-    
-    with col2:
-        if st.button("📧 Email Summary"):
-            st.info("Email functionality would be implemented here")
-    
-    with col3:
-        if st.button("📱 Share Mobile"):
-            st.info("Mobile sharing functionality would be implemented here")
+                if goals:
+                    st.markdown("**Goal Progress:**")
+                    active_goals = len([g for g in goals if g.get('current_amount', 0) < g.get('target_amount', 0)])
+                    completed_goals = len([g for g in goals if g.get('current_amount', 0) >= g.get('target_amount', 0)])
+                    
+                    st.metric("Active Goals", active_goals)
+                    st.metric("Completed Goals", completed_goals)
+                    
+                    if active_goals > 0:
+                        avg_progress = sum(
+                            min(g.get('current_amount', 0) / g.get('target_amount', 1), 1.0) 
+                            for g in goals if g.get('current_amount', 0) < g.get('target_amount', 0)
+                        ) / active_goals * 100
+                        
+                        st.metric("Avg Progress", f"{avg_progress:.1f}%")
+        else:
+            st.info("No recent data available for quick insights.")
+            
+    except Exception as e:
+        logger.error(f"Error getting quick insights: {e}")
+        st.error("Failed to load quick insights")

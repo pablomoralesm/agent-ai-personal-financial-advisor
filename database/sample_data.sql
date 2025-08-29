@@ -9,43 +9,66 @@ INSERT IGNORE INTO customers (id, name, email, phone, date_of_birth) VALUES
 
 -- Insert sample transactions for Alice (customer_id = 1)
 INSERT IGNORE INTO transactions (customer_id, amount, category, subcategory, description, transaction_date, transaction_type, payment_method) VALUES
--- Income
-(1, 5000.00, 'Salary', NULL, 'Monthly salary', '2024-01-01', 'income', 'Direct Deposit'),
-(1, 5000.00, 'Salary', NULL, 'Monthly salary', '2024-02-01', 'income', 'Direct Deposit'),
-(1, 5000.00, 'Salary', NULL, 'Monthly salary', '2024-03-01', 'income', 'Direct Deposit'),
+-- Income (recent months for trend analysis)
+(1, 5000.00, 'Salary', NULL, 'Monthly salary', '2025-03-01', 'income', 'Direct Deposit'),
+(1, 5000.00, 'Salary', NULL, 'Monthly salary', '2025-04-01', 'income', 'Direct Deposit'),
+(1, 5000.00, 'Salary', NULL, 'Monthly salary', '2025-05-01', 'income', 'Direct Deposit'),
+(1, 5000.00, 'Salary', NULL, 'Monthly salary', '2025-06-01', 'income', 'Direct Deposit'),
+(1, 5000.00, 'Salary', NULL, 'Monthly salary', '2025-07-01', 'income', 'Direct Deposit'),
+(1, 5000.00, 'Salary', NULL, 'Monthly salary', '2025-08-01', 'income', 'Direct Deposit'),
 
--- Housing expenses
-(1, 1800.00, 'Housing', 'Rent', 'Monthly rent payment', '2024-01-01', 'expense', 'Bank Transfer'),
-(1, 1800.00, 'Housing', 'Rent', 'Monthly rent payment', '2024-02-01', 'expense', 'Bank Transfer'),
-(1, 1800.00, 'Housing', 'Rent', 'Monthly rent payment', '2024-03-01', 'expense', 'Bank Transfer'),
-(1, 150.00, 'Housing', 'Utilities', 'Electric bill', '2024-01-05', 'expense', 'Credit Card'),
-(1, 180.00, 'Housing', 'Utilities', 'Electric bill', '2024-02-05', 'expense', 'Credit Card'),
-(1, 140.00, 'Housing', 'Utilities', 'Electric bill', '2024-03-05', 'expense', 'Credit Card'),
+-- Housing expenses (recent months)
+(1, 1800.00, 'Housing', 'Rent', 'Monthly rent payment', '2025-03-01', 'expense', 'Bank Transfer'),
+(1, 1800.00, 'Housing', 'Rent', 'Monthly rent payment', '2025-04-01', 'expense', 'Bank Transfer'),
+(1, 1800.00, 'Housing', 'Rent', 'Monthly rent payment', '2025-05-01', 'expense', 'Bank Transfer'),
+(1, 1800.00, 'Housing', 'Rent', 'Monthly rent payment', '2025-06-01', 'expense', 'Bank Transfer'),
+(1, 1800.00, 'Housing', 'Rent', 'Monthly rent payment', '2025-07-01', 'expense', 'Bank Transfer'),
+(1, 1800.00, 'Housing', 'Rent', 'Monthly rent payment', '2025-08-01', 'expense', 'Bank Transfer'),
 
--- Food & Dining
-(1, 400.00, 'Food & Dining', 'Groceries', 'Weekly grocery shopping', '2024-01-07', 'expense', 'Debit Card'),
-(1, 350.00, 'Food & Dining', 'Groceries', 'Weekly grocery shopping', '2024-01-14', 'expense', 'Debit Card'),
-(1, 380.00, 'Food & Dining', 'Groceries', 'Weekly grocery shopping', '2024-01-21', 'expense', 'Debit Card'),
-(1, 420.00, 'Food & Dining', 'Groceries', 'Weekly grocery shopping', '2024-01-28', 'expense', 'Debit Card'),
-(1, 45.00, 'Food & Dining', 'Restaurants', 'Dinner out', '2024-01-10', 'expense', 'Credit Card'),
-(1, 32.00, 'Food & Dining', 'Restaurants', 'Lunch meeting', '2024-01-15', 'expense', 'Credit Card'),
+-- Utilities (recent months)
+(1, 150.00, 'Housing', 'Utilities', 'Electric bill', '2025-03-05', 'expense', 'Credit Card'),
+(1, 180.00, 'Housing', 'Utilities', 'Electric bill', '2025-04-05', 'expense', 'Credit Card'),
+(1, 140.00, 'Housing', 'Utilities', 'Electric bill', '2025-05-05', 'expense', 'Credit Card'),
+(1, 160.00, 'Housing', 'Utilities', 'Electric bill', '2025-06-05', 'expense', 'Credit Card'),
+(1, 170.00, 'Housing', 'Utilities', 'Electric bill', '2025-07-05', 'expense', 'Credit Card'),
+(1, 155.00, 'Housing', 'Utilities', 'Electric bill', '2025-08-05', 'expense', 'Credit Card'),
 
--- Transportation
-(1, 350.00, 'Transportation', 'Car Payment', 'Monthly car payment', '2024-01-01', 'expense', 'Bank Transfer'),
-(1, 350.00, 'Transportation', 'Car Payment', 'Monthly car payment', '2024-02-01', 'expense', 'Bank Transfer'),
-(1, 350.00, 'Transportation', 'Car Payment', 'Monthly car payment', '2024-03-01', 'expense', 'Bank Transfer'),
-(1, 80.00, 'Transportation', 'Gas', 'Gas station fill-up', '2024-01-08', 'expense', 'Credit Card'),
-(1, 75.00, 'Transportation', 'Gas', 'Gas station fill-up', '2024-01-18', 'expense', 'Credit Card'),
+-- Food & Dining (recent months)
+(1, 400.00, 'Food & Dining', 'Groceries', 'Weekly grocery shopping', '2025-03-07', 'expense', 'Debit Card'),
+(1, 350.00, 'Food & Dining', 'Groceries', 'Weekly grocery shopping', '2025-04-07', 'expense', 'Debit Card'),
+(1, 380.00, 'Food & Dining', 'Groceries', 'Weekly grocery shopping', '2025-05-07', 'expense', 'Debit Card'),
+(1, 420.00, 'Food & Dining', 'Groceries', 'Weekly grocery shopping', '2025-06-07', 'expense', 'Debit Card'),
+(1, 390.00, 'Food & Dining', 'Groceries', 'Weekly grocery shopping', '2025-07-07', 'expense', 'Debit Card'),
+(1, 410.00, 'Food & Dining', 'Groceries', 'Weekly grocery shopping', '2025-08-07', 'expense', 'Debit Card'),
 
--- Entertainment
-(1, 15.99, 'Entertainment', 'Streaming', 'Netflix subscription', '2024-01-01', 'expense', 'Credit Card'),
-(1, 12.99, 'Entertainment', 'Streaming', 'Spotify subscription', '2024-01-01', 'expense', 'Credit Card'),
-(1, 25.00, 'Entertainment', 'Movies', 'Movie tickets', '2024-01-12', 'expense', 'Credit Card'),
+-- Transportation (recent months)
+(1, 350.00, 'Transportation', 'Car Payment', 'Monthly car payment', '2025-03-01', 'expense', 'Bank Transfer'),
+(1, 350.00, 'Transportation', 'Car Payment', 'Monthly car payment', '2025-04-01', 'expense', 'Bank Transfer'),
+(1, 350.00, 'Transportation', 'Car Payment', 'Monthly car payment', '2025-05-01', 'expense', 'Bank Transfer'),
+(1, 350.00, 'Transportation', 'Car Payment', 'Monthly car payment', '2025-06-01', 'expense', 'Bank Transfer'),
+(1, 350.00, 'Transportation', 'Car Payment', 'Monthly car payment', '2025-07-01', 'expense', 'Bank Transfer'),
+(1, 350.00, 'Transportation', 'Car Payment', 'Monthly car payment', '2025-08-01', 'expense', 'Bank Transfer'),
 
--- Savings
-(1, 500.00, 'Savings & Investment', 'Emergency Fund', 'Monthly emergency fund contribution', '2024-01-01', 'expense', 'Bank Transfer'),
-(1, 500.00, 'Savings & Investment', 'Emergency Fund', 'Monthly emergency fund contribution', '2024-02-01', 'expense', 'Bank Transfer'),
-(1, 300.00, 'Savings & Investment', 'Retirement', '401k contribution', '2024-01-01', 'expense', 'Payroll Deduction');
+-- Entertainment (recent months)
+(1, 15.99, 'Entertainment', 'Streaming', 'Netflix subscription', '2025-03-01', 'expense', 'Credit Card'),
+(1, 12.99, 'Entertainment', 'Streaming', 'Spotify subscription', '2025-03-01', 'expense', 'Credit Card'),
+(1, 25.00, 'Entertainment', 'Movies', 'Movie tickets', '2025-03-12', 'expense', 'Credit Card'),
+
+-- Savings (recent months)
+(1, 500.00, 'Savings & Investment', 'Emergency Fund', 'Monthly emergency fund contribution', '2025-03-01', 'expense', 'Bank Transfer'),
+(1, 500.00, 'Savings & Investment', 'Emergency Fund', 'Monthly emergency fund contribution', '2025-04-01', 'expense', 'Bank Transfer'),
+(1, 500.00, 'Savings & Investment', 'Emergency Fund', 'Monthly emergency fund contribution', '2025-05-01', 'expense', 'Bank Transfer'),
+(1, 500.00, 'Savings & Investment', 'Emergency Fund', 'Monthly emergency fund contribution', '2025-06-01', 'expense', 'Bank Transfer'),
+(1, 500.00, 'Savings & Investment', 'Emergency Fund', 'Monthly emergency fund contribution', '2025-07-01', 'expense', 'Bank Transfer'),
+(1, 500.00, 'Savings & Investment', 'Emergency Fund', 'Monthly emergency fund contribution', '2025-08-01', 'expense', 'Bank Transfer'),
+
+-- Additional income sources (recent months)
+(1, 200.00, 'Freelance', 'Consulting', 'Side project income', '2025-03-15', 'income', 'PayPal'),
+(1, 300.00, 'Freelance', 'Consulting', 'Side project income', '2025-04-15', 'income', 'PayPal'),
+(1, 250.00, 'Freelance', 'Consulting', 'Side project income', '2025-05-15', 'income', 'PayPal'),
+(1, 350.00, 'Freelance', 'Consulting', 'Side project income', '2025-06-15', 'income', 'PayPal'),
+(1, 275.00, 'Freelance', 'Consulting', 'Side project income', '2025-07-15', 'income', 'PayPal'),
+(1, 325.00, 'Freelance', 'Consulting', 'Side project income', '2025-08-15', 'income', 'PayPal');
 
 -- Insert sample financial goals for Alice
 INSERT IGNORE INTO financial_goals (id, customer_id, goal_name, goal_type, target_amount, current_amount, target_date, priority, status, description) VALUES
@@ -56,18 +79,36 @@ INSERT IGNORE INTO financial_goals (id, customer_id, goal_name, goal_type, targe
 
 -- Insert sample transactions for Bob (customer_id = 2)
 INSERT IGNORE INTO transactions (customer_id, amount, category, subcategory, description, transaction_date, transaction_type, payment_method) VALUES
--- Income
-(2, 4200.00, 'Salary', NULL, 'Monthly salary', '2024-01-01', 'income', 'Direct Deposit'),
-(2, 4200.00, 'Salary', NULL, 'Monthly salary', '2024-02-01', 'income', 'Direct Deposit'),
-(2, 800.00, 'Freelance', NULL, 'Web design project', '2024-01-15', 'income', 'PayPal'),
+-- Income (recent months)
+(2, 4200.00, 'Salary', NULL, 'Monthly salary', '2025-03-01', 'income', 'Direct Deposit'),
+(2, 4200.00, 'Salary', NULL, 'Monthly salary', '2025-04-01', 'income', 'Direct Deposit'),
+(2, 4200.00, 'Salary', NULL, 'Monthly salary', '2025-05-01', 'income', 'Direct Deposit'),
+(2, 4200.00, 'Salary', NULL, 'Monthly salary', '2025-06-01', 'income', 'Direct Deposit'),
+(2, 4200.00, 'Salary', NULL, 'Monthly salary', '2025-07-01', 'income', 'Direct Deposit'),
+(2, 4200.00, 'Salary', NULL, 'Monthly salary', '2025-08-01', 'income', 'Direct Deposit'),
+(2, 800.00, 'Freelance', NULL, 'Web design project', '2025-03-15', 'income', 'PayPal'),
+(2, 750.00, 'Freelance', NULL, 'Web design project', '2025-04-15', 'income', 'PayPal'),
+(2, 900.00, 'Freelance', NULL, 'Web design project', '2025-05-15', 'income', 'PayPal'),
 
--- Expenses
-(2, 1200.00, 'Housing', 'Rent', 'Monthly rent payment', '2024-01-01', 'expense', 'Bank Transfer'),
-(2, 1200.00, 'Housing', 'Rent', 'Monthly rent payment', '2024-02-01', 'expense', 'Bank Transfer'),
-(2, 300.00, 'Food & Dining', 'Groceries', 'Monthly groceries', '2024-01-05', 'expense', 'Debit Card'),
-(2, 280.00, 'Food & Dining', 'Groceries', 'Monthly groceries', '2024-02-05', 'expense', 'Debit Card'),
-(2, 150.00, 'Transportation', 'Public Transport', 'Monthly transit pass', '2024-01-01', 'expense', 'Debit Card'),
-(2, 150.00, 'Transportation', 'Public Transport', 'Monthly transit pass', '2024-02-01', 'expense', 'Debit Card');
+-- Expenses (recent months)
+(2, 1200.00, 'Housing', 'Rent', 'Monthly rent payment', '2025-03-01', 'expense', 'Bank Transfer'),
+(2, 1200.00, 'Housing', 'Rent', 'Monthly rent payment', '2025-04-01', 'expense', 'Bank Transfer'),
+(2, 1200.00, 'Housing', 'Rent', 'Monthly rent payment', '2025-05-01', 'expense', 'Bank Transfer'),
+(2, 1200.00, 'Housing', 'Rent', 'Monthly rent payment', '2025-06-01', 'expense', 'Bank Transfer'),
+(2, 1200.00, 'Housing', 'Rent', 'Monthly rent payment', '2025-07-01', 'expense', 'Bank Transfer'),
+(2, 1200.00, 'Housing', 'Rent', 'Monthly rent payment', '2025-08-01', 'expense', 'Bank Transfer'),
+(2, 300.00, 'Food & Dining', 'Groceries', 'Monthly groceries', '2025-03-05', 'expense', 'Debit Card'),
+(2, 280.00, 'Food & Dining', 'Groceries', 'Monthly groceries', '2025-04-05', 'expense', 'Debit Card'),
+(2, 320.00, 'Food & Dining', 'Groceries', 'Monthly groceries', '2025-05-05', 'expense', 'Debit Card'),
+(2, 290.00, 'Food & Dining', 'Groceries', 'Monthly groceries', '2025-06-05', 'expense', 'Debit Card'),
+(2, 310.00, 'Food & Dining', 'Groceries', 'Monthly groceries', '2025-07-05', 'expense', 'Debit Card'),
+(2, 295.00, 'Food & Dining', 'Groceries', 'Monthly groceries', '2025-08-05', 'expense', 'Debit Card'),
+(2, 150.00, 'Transportation', 'Public Transport', 'Monthly transit pass', '2025-03-01', 'expense', 'Debit Card'),
+(2, 150.00, 'Transportation', 'Public Transport', 'Monthly transit pass', '2025-04-01', 'expense', 'Debit Card'),
+(2, 150.00, 'Transportation', 'Public Transport', 'Monthly transit pass', '2025-05-01', 'expense', 'Debit Card'),
+(2, 150.00, 'Transportation', 'Public Transport', 'Monthly transit pass', '2025-06-01', 'expense', 'Debit Card'),
+(2, 150.00, 'Transportation', 'Public Transport', 'Monthly transit pass', '2025-07-01', 'expense', 'Debit Card'),
+(2, 150.00, 'Transportation', 'Public Transport', 'Monthly transit pass', '2025-08-01', 'expense', 'Debit Card');
 
 -- Insert sample financial goals for Bob
 INSERT IGNORE INTO financial_goals (id, customer_id, goal_name, goal_type, target_amount, current_amount, target_date, priority, status, description) VALUES

@@ -8,6 +8,9 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, date, timedelta
 from typing import Dict, Any, List, Optional
+import logging
+
+logger = logging.getLogger(__name__)
 
 def render_transaction_entry():
     """Render the transaction entry and management interface."""
@@ -180,35 +183,33 @@ def add_transaction(
     description: Optional[str] = None,
     payment_method: Optional[str] = None
 ) -> bool:
-    """
-    Add a new transaction (mock implementation).
-    
-    In a real app, this would use the MCP database server to add the transaction.
-    """
+    """Add a new transaction via database client."""
     try:
-        # Mock implementation - in real app, this would call MCP server
-        transaction_data = {
-            'customer_id': customer_id,
-            'amount': amount,
-            'category': category,
-            'subcategory': subcategory,
-            'description': description,
-            'transaction_date': transaction_date.isoformat(),
-            'transaction_type': transaction_type,
-            'payment_method': payment_method,
-            'created_at': datetime.now().isoformat()
-        }
+        # Import the database client functions
+        from utils.database_client import add_transaction as db_add_transaction
         
-        # Store in session state for demo purposes
-        if 'transactions' not in st.session_state:
-            st.session_state.transactions = []
+        # Save transaction to database
+        success = db_add_transaction(
+            customer_id=customer_id,
+            amount=amount,
+            category=category,
+            transaction_date=transaction_date.strftime('%Y-%m-%d'),
+            transaction_type=transaction_type,
+            subcategory=subcategory,
+            description=description,
+            payment_method=payment_method
+        )
         
-        st.session_state.transactions.append(transaction_data)
-        
-        return True
-        
+        if success:
+            logger.info(f"Transaction saved successfully for customer {customer_id}")
+            return True
+        else:
+            logger.error("Failed to save transaction to database")
+            return False
+            
     except Exception as e:
-        st.error(f"Error adding transaction: {e}")
+        logger.error(f"Error saving transaction: {e}")
+        st.error(f"Failed to save transaction: {e}")
         return False
 
 def render_transaction_history():
@@ -323,107 +324,21 @@ def render_transaction_history():
             )
 
 def get_customer_transactions(customer_id: int) -> List[Dict[str, Any]]:
-    """Get transactions for a customer (mock implementation)."""
-    # Mock transaction data
-    mock_transactions = {
-        1: [  # Alice's transactions
-            {
-                'customer_id': 1,
-                'amount': 5000.00,
-                'category': 'Salary',
-                'subcategory': 'Base Salary',
-                'description': 'Monthly salary',
-                'transaction_date': '2024-03-01',
-                'transaction_type': 'income',
-                'payment_method': 'Direct Deposit'
-            },
-            {
-                'customer_id': 1,
-                'amount': 1800.00,
-                'category': 'Housing',
-                'subcategory': 'Rent',
-                'description': 'Monthly rent payment',
-                'transaction_date': '2024-03-01',
-                'transaction_type': 'expense',
-                'payment_method': 'Bank Transfer'
-            },
-            {
-                'customer_id': 1,
-                'amount': 350.00,
-                'category': 'Transportation',
-                'subcategory': 'Car Payment',
-                'description': 'Monthly car payment',
-                'transaction_date': '2024-03-01',
-                'transaction_type': 'expense',
-                'payment_method': 'Bank Transfer'
-            },
-            {
-                'customer_id': 1,
-                'amount': 450.00,
-                'category': 'Food & Dining',
-                'subcategory': 'Groceries',
-                'description': 'Weekly grocery shopping',
-                'transaction_date': '2024-03-05',
-                'transaction_type': 'expense',
-                'payment_method': 'Debit Card'
-            },
-            {
-                'customer_id': 1,
-                'amount': 75.00,
-                'category': 'Transportation',
-                'subcategory': 'Gas',
-                'description': 'Gas station fill-up',
-                'transaction_date': '2024-03-08',
-                'transaction_type': 'expense',
-                'payment_method': 'Credit Card'
-            }
-        ],
-        2: [  # Bob's transactions
-            {
-                'customer_id': 2,
-                'amount': 4200.00,
-                'category': 'Salary',
-                'subcategory': 'Base Salary',
-                'description': 'Monthly salary',
-                'transaction_date': '2024-03-01',
-                'transaction_type': 'income',
-                'payment_method': 'Direct Deposit'
-            },
-            {
-                'customer_id': 2,
-                'amount': 1200.00,
-                'category': 'Housing',
-                'subcategory': 'Rent',
-                'description': 'Monthly rent payment',
-                'transaction_date': '2024-03-01',
-                'transaction_type': 'expense',
-                'payment_method': 'Bank Transfer'
-            }
-        ],
-        3: [  # Carol's transactions
-            {
-                'customer_id': 3,
-                'amount': 6500.00,
-                'category': 'Salary',
-                'subcategory': 'Base Salary',
-                'description': 'Monthly salary',
-                'transaction_date': '2024-03-01',
-                'transaction_type': 'income',
-                'payment_method': 'Direct Deposit'
-            }
-        ]
-    }
-    
-    # Get mock transactions for this customer
-    customer_transactions = mock_transactions.get(customer_id, [])
-    
-    # Add any transactions from session state (added via form)
-    session_transactions = st.session_state.get('transactions', [])
-    customer_session_transactions = [
-        t for t in session_transactions if t['customer_id'] == customer_id
-    ]
-    
-    return customer_transactions + customer_session_transactions
+    """Get transactions for a customer from database via database client."""
+    try:
+        # Import the database client functions
+        from utils.database_client import get_transactions_by_customer
+        
+        # Get transactions from database
+        transactions = get_transactions_by_customer(customer_id)
+        
+        logger.info(f"Retrieved {len(transactions)} transactions for customer {customer_id}")
+        return transactions
+            
+    except Exception as e:
+        logger.error(f"Error getting transactions: {e}")
+        st.error(f"Failed to load transactions: {e}")
+        return []
 
 def filter_transactions(
     transactions: List[Dict[str, Any]], 
@@ -446,19 +361,38 @@ def filter_transactions(
         
         filtered = [
             t for t in filtered 
-            if datetime.fromisoformat(t['transaction_date'].replace('Z', '+00:00')).replace(tzinfo=None) >= cutoff_date
+            if t.get('transaction_date') and (
+                # Handle both string and date objects
+                (isinstance(t['transaction_date'], str) and 
+                 datetime.strptime(t['transaction_date'], '%Y-%m-%d').date() >= cutoff_date.date()) or
+                (isinstance(t['transaction_date'], date) and 
+                 t['transaction_date'] >= cutoff_date.date()) or
+                (hasattr(t['transaction_date'], 'date') and 
+                 t['transaction_date'].date() >= cutoff_date.date())
+            )
         ]
     
     # Filter by categories
     if categories:
-        filtered = [t for t in filtered if t['category'] in categories]
+        filtered = [t for t in filtered if t.get('category') in categories]
     
     # Filter by transaction types
     if transaction_types:
-        filtered = [t for t in filtered if t['transaction_type'] in transaction_types]
+        filtered = [t for t in filtered if t.get('transaction_type') in transaction_types]
     
     # Sort by date (newest first)
-    filtered.sort(key=lambda x: x['transaction_date'], reverse=True)
+    def get_transaction_date(t):
+        date_val = t.get('transaction_date')
+        if isinstance(date_val, str):
+            return datetime.strptime(date_val, '%Y-%m-%d').date()
+        elif isinstance(date_val, date):
+            return date_val
+        elif hasattr(date_val, 'date'):
+            return date_val.date()
+        else:
+            return date.min  # Default to earliest date if parsing fails
+    
+    filtered.sort(key=get_transaction_date, reverse=True)
     
     return filtered
 
