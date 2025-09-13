@@ -22,14 +22,35 @@ def render_recommendations():
     
     st.markdown("## 🤖 AI Financial Recommendations")
     
-    # Run analysis and get recommendations
-    if st.button("🚀 Run Financial Analysis", type="primary", use_container_width=True):
-        with st.spinner("Analyzing your financial situation..."):
-            recommendations = run_financial_analysis(customer_id)
-            if recommendations:
-                st.session_state.current_recommendations = recommendations
-                st.success("✅ Analysis complete! View recommendations below.")
-                st.rerun()
+    # Analysis type selection
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button("🚀 Full Analysis", type="primary", use_container_width=True):
+            with st.spinner("Running comprehensive financial analysis..."):
+                recommendations = run_financial_analysis(customer_id)
+                if recommendations:
+                    st.session_state.current_recommendations = recommendations
+                    st.success("✅ Full analysis complete! View recommendations below.")
+                    st.rerun()
+    
+    with col2:
+        if st.button("⚡ Quick Analysis", use_container_width=True):
+            with st.spinner("Running quick financial analysis..."):
+                recommendations = run_quick_analysis(customer_id)
+                if recommendations:
+                    st.session_state.current_recommendations = recommendations
+                    st.success("✅ Quick analysis complete! View recommendations below.")
+                    st.rerun()
+    
+    with col3:
+        if st.button("🎯 Goal Analysis", use_container_width=True):
+            with st.spinner("Running goal-focused analysis..."):
+                recommendations = run_goal_analysis(customer_id)
+                if recommendations:
+                    st.session_state.current_recommendations = recommendations
+                    st.success("✅ Goal analysis complete! View recommendations below.")
+                    st.rerun()
     
     # Display current recommendations
     if st.session_state.get('current_recommendations'):
@@ -39,28 +60,75 @@ def render_recommendations():
     render_advice_history(customer_id)
 
 def run_financial_analysis(customer_id: int) -> Optional[Dict[str, Any]]:
-    """Run comprehensive financial analysis using AI agents."""
+    """Run comprehensive financial analysis using the unified agent system."""
     try:
-        # Import the orchestrator agent
-        from agents.orchestrator import FinancialAdvisorOrchestrator
+        # Import the unified agent executor
+        from utils.unified_agent_executor import run_financial_analysis_unified
+        import asyncio
         
-        # Initialize the orchestrator
-        orchestrator = FinancialAdvisorOrchestrator()
+        # Run the analysis using the unified system
+        result = asyncio.run(run_financial_analysis_unified(customer_id))
         
-        # Run the analysis
-        result = orchestrator.run(customer_id=customer_id)
-        
-        if result and result.get('success'):
+        if result and result.get('status') == 'success':
             # Save the advice to database
             save_advice_to_db(customer_id, result)
             return result
         else:
-            st.error("❌ Analysis failed. Please try again.")
+            error_msg = result.get('message', 'Analysis failed') if result else 'No result returned'
+            st.error(f"❌ Analysis failed: {error_msg}")
             return None
             
     except Exception as e:
         logger.error(f"Error running financial analysis: {e}")
         st.error(f"Failed to run analysis: {e}")
+        return None
+
+def run_quick_analysis(customer_id: int) -> Optional[Dict[str, Any]]:
+    """Run quick financial analysis using the unified agent system."""
+    try:
+        # Import the unified agent executor
+        from utils.unified_agent_executor import run_quick_analysis_unified
+        import asyncio
+        
+        # Run the quick analysis using the unified system
+        result = asyncio.run(run_quick_analysis_unified(customer_id))
+        
+        if result and result.get('status') == 'success':
+            # Save the advice to database
+            save_advice_to_db(customer_id, result)
+            return result
+        else:
+            error_msg = result.get('message', 'Quick analysis failed') if result else 'No result returned'
+            st.error(f"❌ Quick analysis failed: {error_msg}")
+            return None
+            
+    except Exception as e:
+        logger.error(f"Error running quick analysis: {e}")
+        st.error(f"Failed to run quick analysis: {e}")
+        return None
+
+def run_goal_analysis(customer_id: int, goal_id: Optional[int] = None) -> Optional[Dict[str, Any]]:
+    """Run goal-focused financial analysis using the unified agent system."""
+    try:
+        # Import the unified agent executor
+        from utils.unified_agent_executor import run_goal_analysis_unified
+        import asyncio
+        
+        # Run the goal analysis using the unified system
+        result = asyncio.run(run_goal_analysis_unified(customer_id, goal_id))
+        
+        if result and result.get('status') == 'success':
+            # Save the advice to database
+            save_advice_to_db(customer_id, result)
+            return result
+        else:
+            error_msg = result.get('message', 'Goal analysis failed') if result else 'No result returned'
+            st.error(f"❌ Goal analysis failed: {error_msg}")
+            return None
+            
+    except Exception as e:
+        logger.error(f"Error running goal analysis: {e}")
+        st.error(f"Failed to run goal analysis: {e}")
         return None
 
 def save_advice_to_db(customer_id: int, advice_data: Dict[str, Any]) -> bool:

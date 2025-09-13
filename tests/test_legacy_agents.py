@@ -1,19 +1,24 @@
 """
-Tests for the AI agents in the Personal Financial Advisor application.
+Tests for the LEGACY AI agents in the Personal Financial Advisor application.
 
-This module tests the core functionality of:
-- SpendingAnalyzerAgent
-- GoalPlannerAgent  
-- AdvisorAgent
-- FinancialAdvisorOrchestrator
+This module tests the OLD agent structure in agents/ directory:
+- SpendingAnalyzerAgent (legacy)
+- GoalPlannerAgent (legacy)
+- AdvisorAgent (legacy)
+- FinancialAdvisorOrchestrator (legacy)
 
-These tests ensure the agents can be created, have proper tools, and follow ADK patterns.
+These tests ensure the legacy agents can be created, have proper tools, and follow ADK patterns.
+This is the OLD architecture before the unified agent system was implemented.
+
+NOTE: These agents are still used in some parts of the application during the transition period.
 """
 
 import unittest
 from unittest.mock import Mock, patch, MagicMock
 import os
 import sys
+import asyncio
+from pathlib import Path
 
 # Add project root to path for imports
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -23,6 +28,8 @@ from agents.spending_analyzer import create_spending_analyzer_agent
 from agents.goal_planner import create_goal_planner_agent
 from agents.advisor import create_advisor_agent
 from agents.orchestrator import create_financial_advisor_orchestrator
+from utils.agent_executor import AgentExecutor
+from utils.adk_session_manager import ADKSessionManager
 
 
 class TestSpendingAnalyzerAgent(unittest.TestCase):
@@ -228,6 +235,136 @@ class TestAgentIntegration(unittest.TestCase):
             
         except Exception as e:
             self.fail(f"Failed to create agents: {e}")
+
+
+class TestAgentExecution(unittest.TestCase):
+    """Test agent execution functionality with proper mocking."""
+    
+    def setUp(self):
+        """Set up test environment."""
+        self.project_root = Path(__file__).parent.parent
+        self.mcp_server_path = str(self.project_root / "mcp_server" / "database_server_stdio.py")
+        self.test_customer_id = 1
+    
+    def test_agent_executor_initialization(self):
+        """Test that AgentExecutor can be initialized."""
+        try:
+            executor = AgentExecutor(self.mcp_server_path)
+            
+            # Verify initialization
+            self.assertIsNotNone(executor)
+            self.assertEqual(executor.mcp_server_path, self.mcp_server_path)
+            self.assertIsNotNone(executor.session_manager)
+            
+        except Exception as e:
+            self.fail(f"Failed to initialize AgentExecutor: {e}")
+    
+    def test_agent_executor_methods_exist(self):
+        """Test that AgentExecutor has all required methods."""
+        try:
+            executor = AgentExecutor(self.mcp_server_path)
+            
+            # Verify all required methods exist
+            self.assertTrue(hasattr(executor, 'execute_quick_analysis'))
+            self.assertTrue(hasattr(executor, 'execute_full_analysis'))
+            self.assertTrue(hasattr(executor, 'execute_goal_analysis'))
+            self.assertTrue(hasattr(executor, 'execute_spending_analysis'))
+            
+            # Verify methods are callable
+            self.assertTrue(callable(executor.execute_quick_analysis))
+            self.assertTrue(callable(executor.execute_full_analysis))
+            self.assertTrue(callable(executor.execute_goal_analysis))
+            self.assertTrue(callable(executor.execute_spending_analysis))
+            
+        except Exception as e:
+            self.fail(f"Failed to verify AgentExecutor methods: {e}")
+    
+    def test_adk_session_manager_initialization(self):
+        """Test ADKSessionManager initialization."""
+        try:
+            session_manager = ADKSessionManager(self.mcp_server_path)
+            
+            # Verify initialization
+            self.assertIsNotNone(session_manager)
+            self.assertEqual(session_manager.mcp_server_path, Path(self.mcp_server_path))
+            
+        except Exception as e:
+            self.fail(f"Failed to initialize ADKSessionManager: {e}")
+    
+    def test_agent_executor_import(self):
+        """Test that AgentExecutor can be imported."""
+        try:
+            from utils.agent_executor import AgentExecutor
+            self.assertTrue(AgentExecutor is not None)
+            self.assertTrue(callable(AgentExecutor))
+        except ImportError as e:
+            self.fail(f"Failed to import AgentExecutor: {e}")
+    
+    def test_adk_session_manager_import(self):
+        """Test that ADKSessionManager can be imported."""
+        try:
+            from utils.adk_session_manager import ADKSessionManager
+            self.assertTrue(ADKSessionManager is not None)
+            self.assertTrue(callable(ADKSessionManager))
+        except ImportError as e:
+            self.fail(f"Failed to import ADKSessionManager: {e}")
+
+
+class TestAgentIntegrationExecution(unittest.TestCase):
+    """Test agent integration and execution with real components."""
+    
+    def setUp(self):
+        """Set up test environment."""
+        self.project_root = Path(__file__).parent.parent
+        self.mcp_server_path = str(self.project_root / "mcp_server" / "database_server_stdio.py")
+        self.test_customer_id = 1
+    
+    def test_agent_creation_with_real_mcp_path(self):
+        """Test that agents can be created with real MCP server path."""
+        try:
+            # Test agent creation with real path
+            spending_agent = create_spending_analyzer_agent(self.mcp_server_path)
+            goal_agent = create_goal_planner_agent(self.mcp_server_path)
+            advisor_agent = create_advisor_agent(self.mcp_server_path)
+            orchestrator = create_financial_advisor_orchestrator(self.mcp_server_path)
+            
+            # Verify all agents were created
+            self.assertIsNotNone(spending_agent)
+            self.assertIsNotNone(goal_agent)
+            self.assertIsNotNone(advisor_agent)
+            self.assertIsNotNone(orchestrator)
+            
+            # Verify MCP server path was set correctly
+            self.assertEqual(spending_agent.mcp_server_path, self.mcp_server_path)
+            self.assertEqual(goal_agent.mcp_server_path, self.mcp_server_path)
+            self.assertEqual(advisor_agent.mcp_server_path, self.mcp_server_path)
+            self.assertEqual(orchestrator._mcp_server_path, self.mcp_server_path)
+            
+        except Exception as e:
+            self.fail(f"Failed to create agents with real MCP path: {e}")
+    
+    def test_mcp_server_path_exists(self):
+        """Test that the MCP server file exists."""
+        self.assertTrue(os.path.exists(self.mcp_server_path), 
+                       f"MCP server file not found at {self.mcp_server_path}")
+    
+    def test_agent_imports_with_real_path(self):
+        """Test that agent imports work with real MCP server path."""
+        try:
+            # Test that we can import and create agents
+            from agents.spending_analyzer import SpendingAnalyzerAgent
+            from agents.goal_planner import GoalPlannerAgent
+            from agents.advisor import AdvisorAgent
+            from agents.orchestrator import FinancialAdvisorOrchestrator
+            
+            # Verify classes are importable
+            self.assertTrue(SpendingAnalyzerAgent is not None)
+            self.assertTrue(GoalPlannerAgent is not None)
+            self.assertTrue(AdvisorAgent is not None)
+            self.assertTrue(FinancialAdvisorOrchestrator is not None)
+            
+        except ImportError as e:
+            self.fail(f"Failed to import agent classes: {e}")
 
 
 if __name__ == '__main__':

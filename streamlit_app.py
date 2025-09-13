@@ -40,6 +40,12 @@ def main():
         initial_sidebar_state="expanded"
     )
     
+    # Initialize MCP server path in session state if not already set
+    if 'mcp_server_path' not in st.session_state:
+        mcp_server_path = str(project_root / "mcp_server" / "database_server_stdio.py")
+        st.session_state.mcp_server_path = mcp_server_path
+        logger.info(f"MCP server path initialized: {mcp_server_path}")
+    
     # Custom CSS for better styling
     st.markdown("""
     <style>
@@ -68,7 +74,7 @@ def main():
         st.session_state.customer_id = None
     
     if 'mcp_server_path' not in st.session_state:
-        st.session_state.mcp_server_path = str(project_root / "mcp_server" / "database_server.py")
+        st.session_state.mcp_server_path = str(project_root / "mcp_server" / "database_server_stdio.py")
     
     # Sidebar for customer selection
     render_customer_selector()
@@ -135,6 +141,21 @@ def render_customer_selector():
     st.sidebar.markdown("---")
     st.sidebar.markdown("## 🔧 System Status")
     
+    # Agent System Status
+    st.sidebar.markdown("### 🤖 Agent System")
+    try:
+        from utils.unified_agent_executor import HybridAgentExecutor
+        executor = HybridAgentExecutor(st.session_state.mcp_server_path, context="streamlit")
+        agent_status = executor.get_agent_status()
+        
+        st.sidebar.success("✅ Unified Agent System")
+        st.sidebar.info(f"**Orchestrator:** {agent_status['orchestrator']['name']}")
+        st.sidebar.info(f"**Type:** {agent_status['orchestrator']['type']}")
+        st.sidebar.info(f"**Context:** {agent_status['deployment_context']}")
+        
+    except Exception as e:
+        st.sidebar.error(f"❌ Agent System Error: {str(e)}")
+    
     # Test database connection
     try:
         from utils.database_client import db_client
@@ -155,6 +176,8 @@ def render_customer_selector():
     else:
         st.sidebar.error("❌ MCP Server: Not Found")
         st.sidebar.info(f"Expected path: {mcp_path}")
+    
+    # MCP Process status removed - unified agent system uses direct MCP integration
 
 def render_welcome_screen():
     """Render welcome screen when no customer is selected."""
@@ -219,94 +242,10 @@ def render_main_content():
     
     with tab4:
         render_recommendations()
-        st.markdown("---")
-        render_analysis_controls()
 
-def render_analysis_controls():
-    """Render analysis control buttons."""
-    st.markdown("## 🚀 Financial Analysis")
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        if st.button("🔍 Full Analysis", type="primary", use_container_width=True):
-            run_full_analysis()
-    
-    with col2:
-        if st.button("⚡ Quick Analysis", use_container_width=True):
-            run_quick_analysis()
-    
-    with col3:
-        if st.button("🎯 Goal Analysis", use_container_width=True):
-            run_goal_analysis()
+# Analysis controls are now handled by the unified agent system in recommendations.py
 
-def run_full_analysis():
-    """Run comprehensive financial analysis using AI agents."""
-    customer_id = st.session_state.customer_id
-    if not customer_id:
-        st.error("Please select a customer first.")
-        return
-    
-    try:
-        with st.spinner("🤖 Running comprehensive financial analysis..."):
-            # This would integrate with the FinancialAdvisorOrchestrator
-            st.success("✅ Full analysis completed!")
-            st.info("""
-            **Analysis Results:**
-            - Spending patterns analyzed
-            - Goal progress evaluated
-            - Personalized recommendations generated
-            - Action plan created
-            
-            *Note: This is a demonstration. In a full implementation, this would call the AI agents through ADK.*
-            """)
-    except Exception as e:
-        st.error(f"❌ Analysis failed: {str(e)}")
-
-def run_quick_analysis():
-    """Run quick financial insights."""
-    customer_id = st.session_state.customer_id
-    if not customer_id:
-        st.error("Please select a customer first.")
-        return
-    
-    try:
-        with st.spinner("⚡ Running quick analysis..."):
-            # This would integrate with the SpendingAnalyzerAgent
-            st.success("✅ Quick analysis completed!")
-            st.info("""
-            **Quick Insights:**
-            - Recent spending trends
-            - Category analysis
-            - Budget recommendations
-            
-            *Note: This is a demonstration. In a full implementation, this would call the SpendingAnalyzerAgent.*
-            """)
-    except Exception as e:
-        st.error(f"❌ Quick analysis failed: {str(e)}")
-
-def run_goal_analysis():
-    """Run goal-focused analysis."""
-    customer_id = st.session_state.customer_id
-    if not customer_id:
-        st.error("Please select a customer first.")
-        return
-    
-    try:
-        with st.spinner("🎯 Analyzing financial goals..."):
-            # This would integrate with the GoalPlannerAgent
-            st.success("✅ Goal analysis completed!")
-            st.info("""
-            **Goal Analysis Results:**
-            - Progress tracking
-            - Timeline adjustments
-            - Savings recommendations
-            - Investment suggestions
-            
-            *Note: This is a demonstration. In a full implementation, this would call the GoalPlannerAgent.*
-            """)
-    except Exception as e:
-        st.error(f"❌ Goal analysis failed: {str(e)}")
+# Analysis functions are now handled by the unified agent system in recommendations.py
 
 if __name__ == "__main__":
     main()

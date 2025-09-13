@@ -18,23 +18,23 @@ from decimal import Decimal
 # Import shared components
 try:
     # Try relative import first (when used as module)
-    from .shared import (
-        DatabaseManager, 
-        get_database_config,
-        setup_logging,
-        get_customer_profile,
-        create_customer,
-        add_transaction,
-        get_transactions_by_customer,
-        get_spending_summary,
-        create_financial_goal,
-        get_financial_goals,
-        update_goal_progress,
-        save_advice,
-        get_advice_history,
-        log_agent_interaction,
-        get_spending_categories
-    )
+from .shared import (
+    DatabaseManager, 
+    get_database_config,
+    setup_logging,
+    get_customer_profile,
+    create_customer,
+    add_transaction,
+    get_transactions_by_customer,
+    get_spending_summary,
+    create_financial_goal,
+    get_financial_goals,
+    update_goal_progress,
+    save_advice,
+    get_advice_history,
+    log_agent_interaction,
+    get_spending_categories
+)
 except ImportError:
     # Fall back to absolute import (when run directly)
     import os
@@ -290,7 +290,7 @@ def main():
                     elif tool_name == 'get_financial_goals':
                         result = get_financial_goals_wrapper(tool_params.get('customer_id'))
                     elif tool_name == 'save_advice':
-                        result = save_advice_wrapper(
+                    result = save_advice_wrapper(
                             tool_params.get('customer_id'),
                             tool_params.get('agent_name'),
                             tool_params.get('advice_type'),
@@ -301,7 +301,7 @@ def main():
                     elif tool_name == 'get_advice_history':
                         result = get_advice_history_wrapper(tool_params.get('customer_id'), tool_params.get('limit', 10))
                     elif tool_name == 'log_agent_interaction':
-                        result = log_agent_interaction_wrapper(
+                    result = log_agent_interaction_wrapper(
                             tool_params.get('session_id'),
                             tool_params.get('from_agent'),
                             tool_params.get('interaction_type'),
@@ -311,7 +311,7 @@ def main():
                             tool_params.get('context_data')
                         )
                     elif tool_name == 'get_spending_categories':
-                        result = get_spending_categories_wrapper()
+                    result = get_spending_categories_wrapper()
                     else:
                         result = {"success": False, "error": f"Unknown tool: {tool_name}"}
                     
@@ -342,7 +342,7 @@ def main():
                         }
                     }
                     print(json.dumps(response))
-                    sys.stdout.flush()
+                sys.stdout.flush()
                     continue
                 
             except json.JSONDecodeError as e:

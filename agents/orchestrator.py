@@ -15,6 +15,8 @@ import os
 
 from google.adk.agents import LlmAgent, BaseAgent
 from google.adk.tools import agent_tool
+from google.adk.events import Event
+from google.genai.types import Content, Part
 
 from agents.spending_analyzer import create_spending_analyzer_agent
 from agents.goal_planner import create_goal_planner_agent
@@ -83,10 +85,7 @@ class FinancialAdvisorOrchestrator(BaseAgent):
             # Get customer ID from context or session state
             customer_id = ctx.session.state.get('customer_id')
             if not customer_id:
-                yield ctx.create_event(
-                    content="Error: No customer ID provided. Please specify a customer ID to analyze.",
-                    event_type="error"
-                )
+                yield Event(author=self.name, content=Content(parts=[Part(text="Error: No customer ID provided. Please specify a customer ID to analyze.")]))
                 return
             
             logger.info(f"Starting financial advisor orchestration for customer {customer_id}")
@@ -95,17 +94,11 @@ class FinancialAdvisorOrchestrator(BaseAgent):
             ctx.session.state['orchestration_start_time'] = datetime.now().isoformat()
             ctx.session.state['current_step'] = 'initialization'
             
-            yield ctx.create_event(
-                content=f"🏦 Starting comprehensive financial analysis for customer {customer_id}...",
-                event_type="progress"
-            )
+            yield Event(author=self.name, content=Content(parts=[Part(text=f"🏦 Starting comprehensive financial analysis for customer {customer_id}...")]))
             
             # Step 1: Spending Analysis
             ctx.session.state['current_step'] = 'spending_analysis'
-            yield ctx.create_event(
-                content="📊 Analyzing spending patterns and habits...",
-                event_type="progress"
-            )
+            yield Event(author=self.name, content=Content(parts=[Part(text="📊 Analyzing spending patterns and habits...")]))
             
             # Run spending analysis through the SpendingAnalyzer
             async for event in self._spending_analyzer.agent.run_async(ctx):
@@ -115,59 +108,35 @@ class FinancialAdvisorOrchestrator(BaseAgent):
             spending_result = await self._spending_analyzer.analyze_customer_spending(ctx, customer_id)
             
             if spending_result.get('status') == 'error':
-                yield ctx.create_event(
-                    content=f"❌ Spending analysis failed: {spending_result.get('error')}",
-                    event_type="error"
-                )
+                yield Event(author=self.name, content=Content(parts=[Part(text=f"❌ Spending analysis failed: {spending_result.get('error')}")]))
                 return
             
-            yield ctx.create_event(
-                content="✅ Spending analysis completed successfully",
-                event_type="progress"
-            )
+            yield Event(author=self.name, content=Content(parts=[Part(text="✅ Spending analysis completed successfully")]))
             
             # Step 2: Goal Planning and Feasibility Analysis
             ctx.session.state['current_step'] = 'goal_planning'
-            yield ctx.create_event(
-                content="🎯 Evaluating financial goals and creating savings plans...",
-                event_type="progress"
-            )
+            yield Event(author=self.name, content=Content(parts=[Part(text="🎯 Evaluating financial goals and creating savings plans...")]))
             
             # Run goal feasibility analysis
             goal_result = await self._goal_planner.evaluate_goal_feasibility(ctx, customer_id)
             
             if goal_result.get('status') == 'error':
-                yield ctx.create_event(
-                    content=f"⚠️ Goal planning completed with warnings: {goal_result.get('error')}",
-                    event_type="warning"
-                )
+                yield Event(author=self.name, content=Content(parts=[Part(text=f"⚠️ Goal planning completed with warnings: {goal_result.get('error')}")]))
             else:
-                yield ctx.create_event(
-                    content="✅ Goal feasibility analysis completed successfully",
-                    event_type="progress"
-                )
+                yield Event(author=self.name, content=Content(parts=[Part(text="✅ Goal feasibility analysis completed successfully")]))
             
             # Step 3: Comprehensive Advice Generation
             ctx.session.state['current_step'] = 'advice_generation'
-            yield ctx.create_event(
-                content="💡 Synthesizing insights and generating comprehensive recommendations...",
-                event_type="progress"
-            )
+            yield Event(author=self.name, content=Content(parts=[Part(text="💡 Synthesizing insights and generating comprehensive recommendations...")]))
             
             # Run comprehensive advice generation
             advice_result = await self._advisor.provide_comprehensive_advice(ctx, customer_id)
             
             if advice_result.get('status') == 'error':
-                yield ctx.create_event(
-                    content=f"❌ Advice generation failed: {advice_result.get('error')}",
-                    event_type="error"
-                )
+                yield Event(author=self.name, content=Content(parts=[Part(text=f"❌ Advice generation failed: {advice_result.get('error')}")]))
                 return
             
-            yield ctx.create_event(
-                content="✅ Comprehensive financial advice generated successfully",
-                event_type="progress"
-            )
+            yield Event(author=self.name, content=Content(parts=[Part(text="✅ Comprehensive financial advice generated successfully")]))
             
             # Step 4: Final Summary and Next Steps
             ctx.session.state['current_step'] = 'completion'
@@ -175,8 +144,7 @@ class FinancialAdvisorOrchestrator(BaseAgent):
             # Create final summary from session state data
             summary = self._create_orchestration_summary(ctx, customer_id)
             
-            yield ctx.create_event(
-                content=f"""
+            yield Event(author=self.name, content=Content(parts=[Part(text=f"""
 🎉 **Financial Analysis Complete!**
 
 **Summary for Customer {customer_id}:**
@@ -190,9 +158,7 @@ class FinancialAdvisorOrchestrator(BaseAgent):
 4. Schedule a follow-up review in 3 months
 
 All analysis data and recommendations have been saved to your profile for future reference.
-""",
-                event_type="completion"
-            )
+""")]))
             
             # Store final orchestration status
             ctx.session.state['orchestration_status'] = 'completed'
@@ -202,10 +168,7 @@ All analysis data and recommendations have been saved to your profile for future
             
         except Exception as e:
             logger.error(f"Error in orchestration: {e}")
-            yield ctx.create_event(
-                content=f"❌ Orchestration failed with error: {str(e)}",
-                event_type="error"
-            )
+            yield Event(author=self.name, content=Content(parts=[Part(text=f"❌ Orchestration failed with error: {str(e)}")]))
             ctx.session.state['orchestration_status'] = 'failed'
             ctx.session.state['error'] = str(e)
     

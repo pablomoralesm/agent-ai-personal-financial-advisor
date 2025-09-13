@@ -54,15 +54,18 @@ class CustomAgent(BaseAgent):
 
 ### 1. MCPToolset Class
 ```python
-from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, StdioServerParameters
+from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, StdioConnectionParams
+from mcp.client.stdio import StdioServerParameters
 
 # Using MCP tools in agents
 agent = LlmAgent(
     tools=[
         MCPToolset(
-            connection_params=StdioServerParameters(
-                command='python3',
-                args=['path/to/mcp_server.py']
+            connection_params=StdioConnectionParams(
+                server_params=StdioServerParameters(
+                    command='python3',
+                    args=['path/to/mcp_server.py']
+                )
             )
         )
     ]

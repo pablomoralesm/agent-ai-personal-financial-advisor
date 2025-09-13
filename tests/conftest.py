@@ -86,12 +86,12 @@ def mock_google_adk_components():
     """Mock Google ADK components for testing."""
     with patch('agents.spending_analyzer.LlmAgent') as mock_llm, \
          patch('agents.spending_analyzer.MCPToolset') as mock_mcp, \
-         patch('agents.spending_analyzer.StdioServerParameters') as mock_stdio:
+         patch('agents.spending_analyzer.StdioConnectionParams') as mock_stdio:
         
         yield {
             'LlmAgent': mock_llm,
             'MCPToolset': mock_mcp,
-            'StdioServerParameters': mock_stdio
+            'StdioConnectionParams': mock_stdio
         }
 
 

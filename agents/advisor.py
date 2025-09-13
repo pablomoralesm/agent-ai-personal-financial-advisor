@@ -13,7 +13,8 @@ import json
 from datetime import datetime
 
 from google.adk.agents import LlmAgent
-from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, StdioServerParameters
+from google.adk.tools.mcp_tool.mcp_toolset import McpToolset, StdioConnectionParams
+from mcp.client.stdio import StdioServerParameters
 from google.adk.tools import agent_tool
 
 from utils.logging_config import get_logger
@@ -48,10 +49,12 @@ class AdvisorAgent:
         
         # Prepare tools list with MCP database access
         tools = [
-            MCPToolset(
-                connection_params=StdioServerParameters(
-                    command='python3',
-                    args=[mcp_server_path]
+            McpToolset(
+                connection_params=StdioConnectionParams(
+                    server_params=StdioServerParameters(
+                        command='python3',
+                        args=[mcp_server_path]
+                    )
                 )
             )
         ]

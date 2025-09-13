@@ -17,23 +17,46 @@ from typing import Dict, Any
 from fastmcp import FastMCP
 
 # Import shared components
-from .shared import (
-    DatabaseManager, 
-    get_database_config,
-    setup_logging,
-    get_customer_profile,
-    create_customer,
-    add_transaction,
-    get_transactions_by_customer,
-    get_spending_summary,
-    create_financial_goal,
-    get_financial_goals,
-    update_goal_progress,
-    save_advice,
-    get_advice_history,
-    log_agent_interaction,
-    get_spending_categories
-)
+try:
+    # Try relative import first (when used as module)
+    from .shared import (
+        DatabaseManager, 
+        get_database_config,
+        setup_logging,
+        get_customer_profile,
+        create_customer,
+        add_transaction,
+        get_transactions_by_customer,
+        get_spending_summary,
+        create_financial_goal,
+        get_financial_goals,
+        update_goal_progress,
+        save_advice,
+        get_advice_history,
+        log_agent_interaction,
+        get_spending_categories
+    )
+except ImportError:
+    # Fall back to absolute import (when run directly)
+    import os
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from mcp_server.shared import (
+        DatabaseManager, 
+        get_database_config,
+        setup_logging,
+        get_customer_profile,
+        create_customer,
+        add_transaction,
+        get_transactions_by_customer,
+        get_spending_summary,
+        create_financial_goal,
+        get_financial_goals,
+        update_goal_progress,
+        save_advice,
+        get_advice_history,
+        log_agent_interaction,
+        get_spending_categories
+    )
 
 # Configure logging
 logger = setup_logging()
