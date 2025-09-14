@@ -1,10 +1,13 @@
 """
 Tests for ADK Web Multi-Agent System
 
-This module tests the ADK Web agents that were created in Phase 2:
-- Unified Financial Advisor
-- Procedural Orchestrator  
-- Intelligent Orchestrator
+This module tests the current ADK Web agents:
+- Standalone Financial Advisor
+- Sequencer Agent (Sequential Orchestrator)
+- Orchestrator Agent (Intelligent Orchestrator)
+- Spending Analyzer Agent
+- Goal Planner Agent
+- Advisor Agent
 
 Part of the Agentic AI Personal Financial Advisor application.
 """
@@ -22,68 +25,124 @@ sys.path.insert(0, str(project_root))
 class TestADKWebAgentDiscovery(unittest.TestCase):
     """Test that ADK Web agents can be discovered and imported."""
     
-    def test_unified_financial_advisor_import(self):
-        """Test that Unified Financial Advisor can be imported."""
+    def test_standalone_agent_import(self):
+        """Test that Standalone Agent can be imported."""
         try:
-            from adk_web_agents.financial_advisor import root_agent, agent
-            self.assertIsNotNone(root_agent)
+            from adk_web_agents.standalone.agent import agent
             self.assertIsNotNone(agent)
-            self.assertEqual(root_agent, agent)
+            self.assertEqual(agent.name, "StandaloneFinancialAdvisor")
         except ImportError as e:
-            self.fail(f"Failed to import Unified Financial Advisor: {e}")
+            self.fail(f"Failed to import Standalone Agent: {e}")
     
-    def test_procedural_orchestrator_import(self):
-        """Test that Procedural Orchestrator can be imported."""
+    def test_sequencer_agent_import(self):
+        """Test that Sequencer Agent can be imported."""
         try:
-            from adk_web_agents.procedural_orchestrator import root_agent, procedural_orchestrator_agent
-            self.assertIsNotNone(root_agent)
-            self.assertIsNotNone(procedural_orchestrator_agent)
-            self.assertEqual(root_agent, procedural_orchestrator_agent)
+            from adk_web_agents.sequencer.agent import agent
+            self.assertIsNotNone(agent)
+            self.assertEqual(agent.name, "SequencerAgent")
         except ImportError as e:
-            self.fail(f"Failed to import Procedural Orchestrator: {e}")
+            self.fail(f"Failed to import Sequencer Agent: {e}")
     
-    def test_intelligent_orchestrator_import(self):
-        """Test that Intelligent Orchestrator can be imported."""
+    def test_orchestrator_agent_import(self):
+        """Test that Orchestrator Agent can be imported."""
         try:
-            from adk_web_agents.intelligent_orchestrator import root_agent, intelligent_orchestrator_agent
-            self.assertIsNotNone(root_agent)
-            self.assertIsNotNone(intelligent_orchestrator_agent)
-            self.assertEqual(root_agent, intelligent_orchestrator_agent)
+            from adk_web_agents.orchestrator.agent import agent
+            self.assertIsNotNone(agent)
+            self.assertEqual(agent.name, "OrchestratorAgent")
         except ImportError as e:
-            self.fail(f"Failed to import Intelligent Orchestrator: {e}")
+            self.fail(f"Failed to import Orchestrator Agent: {e}")
+    
+    def test_spending_analyzer_agent_import(self):
+        """Test that Spending Analyzer Agent can be imported."""
+        try:
+            from adk_web_agents.spending_analyzer.agent import agent
+            self.assertIsNotNone(agent)
+            self.assertEqual(agent.name, "SpendingAnalyzerAgent")
+        except ImportError as e:
+            self.fail(f"Failed to import Spending Analyzer Agent: {e}")
+    
+    def test_goal_planner_agent_import(self):
+        """Test that Goal Planner Agent can be imported."""
+        try:
+            from adk_web_agents.goal_planner.agent import agent
+            self.assertIsNotNone(agent)
+            self.assertEqual(agent.name, "GoalPlannerAgent")
+        except ImportError as e:
+            self.fail(f"Failed to import Goal Planner Agent: {e}")
+    
+    def test_advisor_agent_import(self):
+        """Test that Advisor Agent can be imported."""
+        try:
+            from adk_web_agents.advisor.agent import agent
+            self.assertIsNotNone(agent)
+            self.assertEqual(agent.name, "AdvisorAgent")
+        except ImportError as e:
+            self.fail(f"Failed to import Advisor Agent: {e}")
 
 class TestADKWebAgentStructure(unittest.TestCase):
     """Test the structure and configuration of ADK Web agents."""
     
-    def test_unified_financial_advisor_structure(self):
-        """Test Unified Financial Advisor agent structure."""
-        from adk_web_agents.financial_advisor.agent import agent
+    def test_standalone_agent_structure(self):
+        """Test Standalone Agent structure."""
+        from adk_web_agents.standalone.agent import agent
         
         # Test agent properties
-        self.assertEqual(agent.name, "UnifiedFinancialAdvisor")
-        self.assertIn("Unified Financial Advisor", agent.description)
+        self.assertEqual(agent.name, "StandaloneFinancialAdvisor")
+        self.assertIn("Pure MCP-only financial advisor", agent.description)
         self.assertEqual(agent.model, "gemini-2.0-flash-exp")
         self.assertIsNotNone(agent.tools)
         self.assertEqual(len(agent.tools), 1)  # Should have MCPToolset
     
-    def test_procedural_orchestrator_structure(self):
-        """Test Procedural Orchestrator agent structure."""
-        from adk_web_agents.procedural_orchestrator.agent import agent
+    def test_sequencer_agent_structure(self):
+        """Test Sequencer Agent structure."""
+        from adk_web_agents.sequencer.agent import agent
         
         # Test agent properties
-        self.assertEqual(agent.name, "ProceduralOrchestrator")
-        self.assertIn("Procedural Financial Orchestrator", agent.description)
-        self.assertEqual(agent.model, "gemini-2.0-flash-exp")
-        self.assertIsNotNone(agent.tools)
-        self.assertEqual(len(agent.tools), 1)  # Should have MCPToolset
+        self.assertEqual(agent.name, "SequencerAgent")
+        self.assertIn("Sequential Financial Analysis Orchestrator", agent.description)
+        self.assertIsNotNone(agent.sub_agents)
+        self.assertEqual(len(agent.sub_agents), 3)  # Should have 3 sub-agents
     
-    def test_intelligent_orchestrator_structure(self):
-        """Test Intelligent Orchestrator agent structure."""
-        from adk_web_agents.intelligent_orchestrator.agent import agent
+    def test_orchestrator_agent_structure(self):
+        """Test Orchestrator Agent structure."""
+        from adk_web_agents.orchestrator.agent import agent
         
         # Test agent properties
-        self.assertEqual(agent.name, "IntelligentOrchestrator")
+        self.assertEqual(agent.name, "OrchestratorAgent")
         self.assertIn("Intelligent Financial Orchestrator", agent.description)
+        self.assertEqual(agent.model, "gemini-2.0-flash-exp")
+        self.assertIsNotNone(agent.tools)
+        self.assertGreater(len(agent.tools), 1)  # Has MCPToolset + agent tools
+    
+    def test_spending_analyzer_agent_structure(self):
+        """Test Spending Analyzer Agent structure."""
+        from adk_web_agents.spending_analyzer.agent import agent
+        
+        # Test agent properties
+        self.assertEqual(agent.name, "SpendingAnalyzerAgent")
+        self.assertIn("Analyzes customer spending habits", agent.description)
+        self.assertEqual(agent.model, "gemini-2.0-flash-exp")
+        self.assertIsNotNone(agent.tools)
+        self.assertEqual(len(agent.tools), 1)  # Should have MCPToolset
+    
+    def test_goal_planner_agent_structure(self):
+        """Test Goal Planner Agent structure."""
+        from adk_web_agents.goal_planner.agent import agent
+        
+        # Test agent properties
+        self.assertEqual(agent.name, "GoalPlannerAgent")
+        self.assertIn("Evaluates financial goal feasibility", agent.description)
+        self.assertEqual(agent.model, "gemini-2.0-flash-exp")
+        self.assertIsNotNone(agent.tools)
+        self.assertEqual(len(agent.tools), 1)  # Should have MCPToolset
+    
+    def test_advisor_agent_structure(self):
+        """Test Advisor Agent structure."""
+        from adk_web_agents.advisor.agent import agent
+        
+        # Test agent properties
+        self.assertEqual(agent.name, "AdvisorAgent")
+        self.assertIn("Main financial advisor", agent.description)
         self.assertEqual(agent.model, "gemini-2.0-flash-exp")
         self.assertIsNotNone(agent.tools)
         self.assertEqual(len(agent.tools), 1)  # Should have MCPToolset
@@ -91,83 +150,87 @@ class TestADKWebAgentStructure(unittest.TestCase):
 class TestADKWebAgentDescriptions(unittest.TestCase):
     """Test that agent descriptions are comprehensive and informative."""
     
-    def test_unified_financial_advisor_description(self):
-        """Test Unified Financial Advisor description content."""
-        from adk_web_agents.financial_advisor.agent import agent
+    def test_standalone_agent_description(self):
+        """Test Standalone Agent description content."""
+        from adk_web_agents.standalone.agent import agent
         
         description = agent.description
         # Check for key concepts
-        self.assertIn("Unified Financial Advisor", description)
-        self.assertIn("multi-agent architecture", description)
+        self.assertIn("Pure MCP-only financial advisor", description)
+        self.assertIn("comprehensive analysis", description)
+        self.assertIn("direct database tool access", description)
+    
+    def test_sequencer_agent_description(self):
+        """Test Sequencer Agent description content."""
+        from adk_web_agents.sequencer.agent import agent
+        
+        description = agent.description
+        # Check for key concepts
+        self.assertIn("Sequential Financial Analysis Orchestrator", description)
+        self.assertIn("step-by-step", description)
         self.assertIn("Spending Analysis", description)
         self.assertIn("Goal Planning", description)
-        self.assertIn("Personalized Advice", description)
-        self.assertIn("Financial Health", description)
+        self.assertIn("Advisory Services", description)
     
-    def test_procedural_orchestrator_description(self):
-        """Test Procedural Orchestrator description content."""
-        from adk_web_agents.procedural_orchestrator.agent import agent
-        
-        description = agent.description
-        # Check for key concepts
-        self.assertIn("Procedural Financial Orchestrator", description)
-        self.assertIn("educational", description)
-        self.assertIn("step-by-step", description)
-        self.assertIn("Spending Analysis Agent", description)
-        self.assertIn("Goal Planning Agent", description)
-        self.assertIn("Advisor Agent", description)
-    
-    def test_intelligent_orchestrator_description(self):
-        """Test Intelligent Orchestrator description content."""
-        from adk_web_agents.intelligent_orchestrator.agent import agent
+    def test_orchestrator_agent_description(self):
+        """Test Orchestrator Agent description content."""
+        from adk_web_agents.orchestrator.agent import agent
         
         description = agent.description
         # Check for key concepts
         self.assertIn("Intelligent Financial Orchestrator", description)
         self.assertIn("Intelligent Coordination", description)
         self.assertIn("dynamic", description)
-        self.assertIn("adaptive", description)
-        self.assertIn("Production-level", description)
+        self.assertIn("Adaptive Approach", description)
 
 class TestADKWebAgentMCPIntegration(unittest.TestCase):
     """Test MCP integration for ADK Web agents."""
     
-    def test_all_agents_have_mcp_tools(self):
-        """Test that all ADK Web agents have MCP tools configured."""
-        from adk_web_agents.financial_advisor.agent import agent as financial_agent
-        from adk_web_agents.procedural_orchestrator.agent import agent as procedural_agent
-        from adk_web_agents.intelligent_orchestrator.agent import agent as intelligent_agent
+    def test_standalone_agent_has_mcp_tools(self):
+        """Test that Standalone Agent has MCP tools configured."""
+        from adk_web_agents.standalone.agent import agent
         
-        agents = [financial_agent, procedural_agent, intelligent_agent]
-        
-        for agent in agents:
-            with self.subTest(agent=agent.name):
-                self.assertIsNotNone(agent.tools)
-                self.assertEqual(len(agent.tools), 1)
-                # Check that it's an MCPToolset
-                tool = agent.tools[0]
-                self.assertIsNotNone(tool)
-    
-    def test_mcp_toolset_configuration(self):
-        """Test that MCP toolset is properly configured."""
-        from adk_web_agents.financial_advisor.agent import agent
-        
+        self.assertIsNotNone(agent.tools)
+        self.assertEqual(len(agent.tools), 1)
+        # Check that it's an MCPToolset
         tool = agent.tools[0]
-        # The tool should be an MCPToolset instance
         self.assertIsNotNone(tool)
-        # We can't easily test the internal configuration without mocking,
-        # but we can verify it exists and is callable
+    
+    def test_sequencer_agent_has_sub_agents(self):
+        """Test that Sequencer Agent has sub-agents configured."""
+        from adk_web_agents.sequencer.agent import agent
+        
+        self.assertIsNotNone(agent.sub_agents)
+        self.assertEqual(len(agent.sub_agents), 3)
+        
+        # Check sub-agent names
+        sub_agent_names = [sub_agent.name for sub_agent in agent.sub_agents]
+        self.assertIn("SpendingAnalyzerAgent", sub_agent_names)
+        self.assertIn("GoalPlannerAgent", sub_agent_names)
+        self.assertIn("AdvisorAgent", sub_agent_names)
+    
+    def test_orchestrator_agent_has_mcp_tools(self):
+        """Test that Orchestrator Agent has MCP tools configured."""
+        from adk_web_agents.orchestrator.agent import agent
+        
+        self.assertIsNotNone(agent.tools)
+        self.assertGreater(len(agent.tools), 1)  # Has MCPToolset + agent tools
+        # Check that it has tools
+        for tool in agent.tools:
+            self.assertIsNotNone(tool)
 
 class TestADKWebAgentConsistency(unittest.TestCase):
     """Test consistency across ADK Web agents."""
     
     def test_all_agents_use_same_model(self):
         """Test that all agents use the same model."""
-        from adk_web_agents.financial_advisor.agent import agent as financial_agent
-        from adk_web_agents.procedural_orchestrator.agent import agent as procedural_agent
-        from adk_web_agents.intelligent_orchestrator.agent import agent as intelligent_agent
+        from adk_web_agents.standalone.agent import agent as standalone_agent
+        from adk_web_agents.orchestrator.agent import agent as orchestrator_agent
+        from adk_web_agents.spending_analyzer.agent import agent as spending_agent
+        from adk_web_agents.goal_planner.agent import agent as goal_agent
+        from adk_web_agents.advisor.agent import agent as advisor_agent
         
-        agents = [financial_agent, procedural_agent, intelligent_agent]
+        agents = [standalone_agent, orchestrator_agent, spending_agent, goal_agent, advisor_agent]
         models = [agent.model for agent in agents]
         
         # All should use the same model
@@ -176,11 +239,13 @@ class TestADKWebAgentConsistency(unittest.TestCase):
     
     def test_all_agents_have_tools(self):
         """Test that all agents have tools configured."""
-        from adk_web_agents.financial_advisor.agent import agent as financial_agent
-        from adk_web_agents.procedural_orchestrator.agent import agent as procedural_agent
-        from adk_web_agents.intelligent_orchestrator.agent import agent as intelligent_agent
+        from adk_web_agents.standalone.agent import agent as standalone_agent
+        from adk_web_agents.orchestrator.agent import agent as orchestrator_agent
+        from adk_web_agents.spending_analyzer.agent import agent as spending_agent
+        from adk_web_agents.goal_planner.agent import agent as goal_agent
+        from adk_web_agents.advisor.agent import agent as advisor_agent
         
-        agents = [financial_agent, procedural_agent, intelligent_agent]
+        agents = [standalone_agent, orchestrator_agent, spending_agent, goal_agent, advisor_agent]
         
         for agent in agents:
             with self.subTest(agent=agent.name):
@@ -189,23 +254,32 @@ class TestADKWebAgentConsistency(unittest.TestCase):
     
     def test_agent_names_are_unique(self):
         """Test that all agent names are unique."""
-        from adk_web_agents.financial_advisor.agent import agent as financial_agent
-        from adk_web_agents.procedural_orchestrator.agent import agent as procedural_agent
-        from adk_web_agents.intelligent_orchestrator.agent import agent as intelligent_agent
+        from adk_web_agents.standalone.agent import agent as standalone_agent
+        from adk_web_agents.sequencer.agent import agent as sequencer_agent
+        from adk_web_agents.orchestrator.agent import agent as orchestrator_agent
+        from adk_web_agents.spending_analyzer.agent import agent as spending_agent
+        from adk_web_agents.goal_planner.agent import agent as goal_agent
+        from adk_web_agents.advisor.agent import agent as advisor_agent
         
         names = [
-            financial_agent.name,
-            procedural_agent.name,
-            intelligent_agent.name
+            standalone_agent.name,
+            sequencer_agent.name,
+            orchestrator_agent.name,
+            spending_agent.name,
+            goal_agent.name,
+            advisor_agent.name
         ]
         
         # All names should be unique
         self.assertEqual(len(names), len(set(names)))
         
         # Check specific names
-        self.assertIn("UnifiedFinancialAdvisor", names)
-        self.assertIn("ProceduralOrchestrator", names)
-        self.assertIn("IntelligentOrchestrator", names)
+        self.assertIn("StandaloneFinancialAdvisor", names)
+        self.assertIn("SequencerAgent", names)
+        self.assertIn("OrchestratorAgent", names)
+        self.assertIn("SpendingAnalyzerAgent", names)
+        self.assertIn("GoalPlannerAgent", names)
+        self.assertIn("AdvisorAgent", names)
 
 class TestADKWebAgentFiles(unittest.TestCase):
     """Test that all required ADK Web agent files exist."""
@@ -215,9 +289,12 @@ class TestADKWebAgentFiles(unittest.TestCase):
         base_path = Path(__file__).parent.parent / "adk_web_agents"
         
         expected_dirs = [
-            "financial_advisor",
-            "procedural_orchestrator", 
-            "intelligent_orchestrator"
+            "standalone",
+            "sequencer",
+            "orchestrator",
+            "spending_analyzer",
+            "goal_planner",
+            "advisor"
         ]
         
         for dir_name in expected_dirs:
@@ -231,12 +308,18 @@ class TestADKWebAgentFiles(unittest.TestCase):
         base_path = Path(__file__).parent.parent / "adk_web_agents"
         
         expected_files = [
-            "financial_advisor/__init__.py",
-            "financial_advisor/agent.py",
-            "procedural_orchestrator/__init__.py",
-            "procedural_orchestrator/agent.py",
-            "intelligent_orchestrator/__init__.py",
-            "intelligent_orchestrator/agent.py",
+            "standalone/__init__.py",
+            "standalone/agent.py",
+            "sequencer/__init__.py",
+            "sequencer/agent.py",
+            "orchestrator/__init__.py",
+            "orchestrator/agent.py",
+            "spending_analyzer/__init__.py",
+            "spending_analyzer/agent.py",
+            "goal_planner/__init__.py",
+            "goal_planner/agent.py",
+            "advisor/__init__.py",
+            "advisor/agent.py",
             "README.md"
         ]
         

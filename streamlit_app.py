@@ -144,14 +144,19 @@ def render_customer_selector():
     # Agent System Status
     st.sidebar.markdown("### 🤖 Agent System")
     try:
-        from utils.unified_agent_executor import HybridAgentExecutor
-        executor = HybridAgentExecutor(st.session_state.mcp_server_path, context="streamlit")
-        agent_status = executor.get_agent_status()
+        from utils.adk_agent_manager import ADKAgentManager
+        manager = ADKAgentManager(mcp_server_path=st.session_state.mcp_server_path)
+        agent_status = manager.get_agent_status()
         
-        st.sidebar.success("✅ Unified Agent System")
-        st.sidebar.info(f"**Orchestrator:** {agent_status['orchestrator']['name']}")
-        st.sidebar.info(f"**Type:** {agent_status['orchestrator']['type']}")
+        st.sidebar.success("✅ ADK Agent System")
+        st.sidebar.info(f"**Manager:** {agent_status['agent_manager']}")
+        st.sidebar.info(f"**Integration:** {agent_status['integration_type']}")
         st.sidebar.info(f"**Context:** {agent_status['deployment_context']}")
+        
+        # Show available agents
+        st.sidebar.markdown("**Available Agents:**")
+        for agent in agent_status['available_agents']:
+            st.sidebar.info(f"• {agent}")
         
     except Exception as e:
         st.sidebar.error(f"❌ Agent System Error: {str(e)}")

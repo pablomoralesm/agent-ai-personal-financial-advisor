@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS advice_history (
     customer_id INT NOT NULL,
     agent_name VARCHAR(100) NOT NULL,
     advice_type VARCHAR(100) NOT NULL, -- 'spending_analysis', 'goal_planning', 'general_advice'
-    advice_content TEXT NOT NULL,
+    advice_content TEXT NOT NULL DEFAULT '',
     advice_text TEXT, -- Alternative field name for compatibility
     confidence_score DECIMAL(3,2), -- 0.00 to 1.00
     metadata JSON, -- Additional structured data from agents

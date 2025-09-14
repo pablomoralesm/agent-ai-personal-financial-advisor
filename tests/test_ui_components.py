@@ -253,7 +253,8 @@ class TestStreamlitAppImport(unittest.TestCase):
             import streamlit_app
             # Check that the module has the expected functions
             self.assertTrue(hasattr(streamlit_app, 'render_customer_selector'))
-            self.assertTrue(hasattr(streamlit_app, 'render_analysis_controls'))
+            # render_analysis_controls was removed - analysis controls are now in recommendations.py
+            self.assertTrue(hasattr(streamlit_app, 'render_main_content'))
         except Exception as e:
             self.fail(f"Failed to check Streamlit app functions: {e}")
 

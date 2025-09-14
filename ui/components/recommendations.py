@@ -13,46 +13,37 @@ import logging
 logger = logging.getLogger(__name__)
 
 def render_recommendations():
-    """Render the recommendations interface."""
+    """Render the simplified recommendations interface."""
     if not st.session_state.get('customer_id'):
         st.warning("No customer selected")
         return
     
     customer_id = st.session_state.customer_id
     
-    st.markdown("## 🤖 AI Financial Recommendations")
+    st.markdown("## 🤖 AI Financial Analysis")
     
-    # Analysis type selection
-    col1, col2, col3 = st.columns(3)
+    # Single analysis button - Full Analysis only
+    col1, col2, col3 = st.columns([1, 2, 1])
     
-    with col1:
-        if st.button("🚀 Full Analysis", type="primary", use_container_width=True):
-            with st.spinner("Running comprehensive financial analysis..."):
+    with col2:
+        if st.button("🚀 Run Full Financial Analysis", type="primary", use_container_width=True):
+            with st.spinner("Running comprehensive financial analysis with multi-agent coordination..."):
                 recommendations = run_financial_analysis(customer_id)
                 if recommendations:
                     st.session_state.current_recommendations = recommendations
                     st.success("✅ Full analysis complete! View recommendations below.")
                     st.rerun()
     
-    with col2:
-        if st.button("⚡ Quick Analysis", use_container_width=True):
-            with st.spinner("Running quick financial analysis..."):
-                recommendations = run_quick_analysis(customer_id)
-                if recommendations:
-                    st.session_state.current_recommendations = recommendations
-                    st.success("✅ Quick analysis complete! View recommendations below.")
-                    st.rerun()
+    # Analysis description
+    st.markdown("""
+    **Full Analysis includes:**
+    - 📊 **Spending Analysis**: Detailed transaction analysis and spending patterns
+    - 🎯 **Goal Planning**: Financial goal evaluation and savings planning  
+    - 💡 **Financial Advice**: Comprehensive recommendations and action items
+    - 🔄 **Multi-Agent Coordination**: Step-by-step analysis using specialized agents
+    """)
     
-    with col3:
-        if st.button("🎯 Goal Analysis", use_container_width=True):
-            with st.spinner("Running goal-focused analysis..."):
-                recommendations = run_goal_analysis(customer_id)
-                if recommendations:
-                    st.session_state.current_recommendations = recommendations
-                    st.success("✅ Goal analysis complete! View recommendations below.")
-                    st.rerun()
-    
-    # Display current recommendations
+    # Display current recommendations if available
     if st.session_state.get('current_recommendations'):
         render_current_recommendations(st.session_state.current_recommendations)
     
@@ -60,112 +51,84 @@ def render_recommendations():
     render_advice_history(customer_id)
 
 def run_financial_analysis(customer_id: int) -> Optional[Dict[str, Any]]:
-    """Run comprehensive financial analysis using the unified agent system."""
+    """Run comprehensive financial analysis using ADK agents."""
     try:
-        # Import the unified agent executor
-        from utils.unified_agent_executor import run_financial_analysis_unified
+        from utils.adk_agent_manager import run_full_analysis_adk
         import asyncio
         
-        # Run the analysis using the unified system
-        result = asyncio.run(run_financial_analysis_unified(customer_id))
+        # Run the analysis using ADK agents
+        result = asyncio.run(run_full_analysis_adk(customer_id))
         
         if result and result.get('status') == 'success':
             # Save the advice to database
             save_advice_to_db(customer_id, result)
-            return result
+            return {
+                'analysis_type': 'full',
+                'customer_id': customer_id,
+                'agent_used': result.get('agent_used', 'SequencerAgent'),
+                'result': result.get('result'),
+                'timestamp': datetime.now().isoformat()
+            }
         else:
-            error_msg = result.get('message', 'Analysis failed') if result else 'No result returned'
-            st.error(f"❌ Analysis failed: {error_msg}")
+            st.error(f"Analysis failed: {result.get('error', 'Unknown error')}")
             return None
             
     except Exception as e:
-        logger.error(f"Error running financial analysis: {e}")
-        st.error(f"Failed to run analysis: {e}")
+        st.error(f"Error running analysis: {str(e)}")
+        logger.error(f"Error in run_financial_analysis: {str(e)}")
         return None
 
-def run_quick_analysis(customer_id: int) -> Optional[Dict[str, Any]]:
-    """Run quick financial analysis using the unified agent system."""
-    try:
-        # Import the unified agent executor
-        from utils.unified_agent_executor import run_quick_analysis_unified
-        import asyncio
-        
-        # Run the quick analysis using the unified system
-        result = asyncio.run(run_quick_analysis_unified(customer_id))
-        
-        if result and result.get('status') == 'success':
-            # Save the advice to database
-            save_advice_to_db(customer_id, result)
-            return result
-        else:
-            error_msg = result.get('message', 'Quick analysis failed') if result else 'No result returned'
-            st.error(f"❌ Quick analysis failed: {error_msg}")
-            return None
-            
-    except Exception as e:
-        logger.error(f"Error running quick analysis: {e}")
-        st.error(f"Failed to run quick analysis: {e}")
-        return None
-
-def run_goal_analysis(customer_id: int, goal_id: Optional[int] = None) -> Optional[Dict[str, Any]]:
-    """Run goal-focused financial analysis using the unified agent system."""
-    try:
-        # Import the unified agent executor
-        from utils.unified_agent_executor import run_goal_analysis_unified
-        import asyncio
-        
-        # Run the goal analysis using the unified system
-        result = asyncio.run(run_goal_analysis_unified(customer_id, goal_id))
-        
-        if result and result.get('status') == 'success':
-            # Save the advice to database
-            save_advice_to_db(customer_id, result)
-            return result
-        else:
-            error_msg = result.get('message', 'Goal analysis failed') if result else 'No result returned'
-            st.error(f"❌ Goal analysis failed: {error_msg}")
-            return None
-            
-    except Exception as e:
-        logger.error(f"Error running goal analysis: {e}")
-        st.error(f"Failed to run goal analysis: {e}")
-        return None
 
 def save_advice_to_db(customer_id: int, advice_data: Dict[str, Any]) -> bool:
     """Save financial advice to database via database client."""
     try:
         from utils.database_client import save_advice
         
-        # Extract key information from advice
-        advice_summary = advice_data.get('summary', 'Financial analysis completed')
-        recommendations = advice_data.get('recommendations', [])
-        spending_analysis = advice_data.get('spending_analysis', {})
-        goal_analysis = advice_data.get('goal_analysis', {})
+        # Extract key information from ADK agent result
+        agent_used = advice_data.get('agent_used', 'SequencerAgent')
+        analysis_type = advice_data.get('analysis_type', 'full')
+        result_data = advice_data.get('result', {})
+        
+        # Create advice summary from ADK agent result
+        if isinstance(result_data, dict):
+            advice_summary = result_data.get('summary', f'{analysis_type.title()} analysis completed using {agent_used}')
+            recommendations = result_data.get('recommendations', [])
+            spending_analysis = result_data.get('spending_analysis', {})
+            goal_analysis = result_data.get('goal_analysis', {})
+        else:
+            # If result is a string or other format
+            advice_summary = f'{analysis_type.title()} analysis completed using {agent_used}'
+            recommendations = []
+            spending_analysis = {}
+            goal_analysis = {}
         
         # Create detailed advice text
         advice_text = f"""
 {advice_summary}
 
+**Analysis Type:** {analysis_type.title()}
+**Agent Used:** {agent_used}
+
 **Key Recommendations:**
-{chr(10).join([f"• {rec}" for rec in recommendations[:5]])}
+{chr(10).join([f"• {rec}" for rec in recommendations[:5]]) if recommendations else "• No specific recommendations available"}
 
 **Spending Insights:**
-{chr(10).join([f"• {key}: {value}" for key, value in spending_analysis.items()][:3])}
+{chr(10).join([f"• {key}: {value}" for key, value in spending_analysis.items()][:3]) if spending_analysis else "• No spending analysis available"}
 
 **Goal Progress:**
-{chr(10).join([f"• {key}: {value}" for key, value in goal_analysis.items()][:3])}
+{chr(10).join([f"• {key}: {value}" for key, value in goal_analysis.items()][:3]) if goal_analysis else "• No goal analysis available"}
         """.strip()
         
         success = save_advice(
             customer_id=customer_id,
-            advice_type='comprehensive_analysis',
+            advice_type=f'{analysis_type}_analysis',
             advice_text=advice_text,
-            agent_name='FinancialAdvisorOrchestrator',
+            agent_name=agent_used,
             confidence_score=0.85
         )
         
         if success:
-            logger.info(f"Advice saved successfully for customer {customer_id}")
+            logger.info(f"Advice saved successfully for customer {customer_id} using {agent_used}")
             return True
         else:
             logger.error("Failed to save advice to database")
@@ -179,94 +142,129 @@ def render_current_recommendations(recommendations: Dict[str, Any]):
     """Render current analysis recommendations."""
     st.markdown("### 📊 Current Analysis Results")
     
-    # Summary
-    if recommendations.get('summary'):
-        st.info(f"**Summary:** {recommendations['summary']}")
-    
-    # Key metrics
+    # Analysis info
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if 'spending_score' in recommendations:
-            st.metric(
-                "Spending Score",
-                f"{recommendations['spending_score']}/10",
-                help="AI assessment of spending habits"
-            )
+        analysis_type = recommendations.get('analysis_type', 'full')
+        st.metric("Analysis Type", analysis_type.title())
     
     with col2:
-        if 'savings_score' in recommendations:
-            st.metric(
-                "Savings Score", 
-                f"{recommendations['savings_score']}/10",
-                help="AI assessment of savings behavior"
-            )
+        agent_used = recommendations.get('agent_used', 'SequencerAgent')
+        st.metric("Agent Used", agent_used)
     
     with col3:
-        if 'overall_score' in recommendations:
-            st.metric(
-                "Overall Score",
-                f"{recommendations['overall_score']}/10",
-                help="Overall financial health score"
-            )
+        timestamp = recommendations.get('timestamp', 'Unknown')
+        if timestamp != 'Unknown':
+            try:
+                from datetime import datetime
+                dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                formatted_time = dt.strftime('%Y-%m-%d %H:%M')
+                st.metric("Completed", formatted_time)
+            except:
+                st.metric("Completed", "Unknown")
+        else:
+            st.metric("Completed", "Unknown")
     
-    # Recommendations
-    if recommendations.get('recommendations'):
-        st.markdown("#### 🎯 Key Recommendations")
-        
-        for i, rec in enumerate(recommendations['recommendations'], 1):
-            st.markdown(f"**{i}.** {rec}")
+    # Get the actual result data
+    result_data = recommendations.get('result', {})
     
-    # Spending analysis
-    if recommendations.get('spending_analysis'):
-        st.markdown("#### 💰 Spending Analysis")
-        
-        spending_data = recommendations['spending_analysis']
-        
-        col1, col2 = st.columns(2)
+    # Summary
+    if isinstance(result_data, dict) and result_data.get('summary'):
+        st.info(f"**Summary:** {result_data['summary']}")
+    elif isinstance(result_data, str):
+        st.info(f"**Analysis Result:** {result_data}")
+    
+    # Key metrics (if available in result)
+    if isinstance(result_data, dict):
+        col1, col2, col3 = st.columns(3)
         
         with col1:
-            if 'top_categories' in spending_data:
-                st.markdown("**Top Spending Categories:**")
-                for category, amount in spending_data['top_categories'][:3]:
-                    st.write(f"• {category}: ${amount:,.0f}")
-        
-        with col2:
-            if 'monthly_trend' in spending_data:
-                trend = spending_data['monthly_trend']
-                st.markdown("**Monthly Trend:**")
-                st.write(f"• {trend}")
-    
-    # Goal analysis
-    if recommendations.get('goal_analysis'):
-        st.markdown("#### 🎯 Goal Analysis")
-        
-        goal_data = recommendations['goal_analysis']
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            if 'goals_on_track' in goal_data:
+            if 'spending_score' in result_data:
                 st.metric(
-                    "Goals On Track",
-                    goal_data['goals_on_track'],
-                    help="Number of goals meeting their targets"
+                    "Spending Score",
+                    f"{result_data['spending_score']}/10",
+                    help="AI assessment of spending habits"
                 )
         
         with col2:
-            if 'goals_behind' in goal_data:
+            if 'savings_score' in result_data:
                 st.metric(
-                    "Goals Behind",
-                    goal_data['goals_behind'],
-                    help="Number of goals needing attention"
+                    "Savings Score", 
+                    f"{result_data['savings_score']}/10",
+                    help="AI assessment of savings behavior"
                 )
-    
-    # Action items
-    if recommendations.get('action_items'):
-        st.markdown("#### ⚡ Immediate Action Items")
         
-        for action in recommendations['action_items']:
-            st.markdown(f"• **{action['priority']}:** {action['description']}")
+        with col3:
+            if 'overall_score' in result_data:
+                st.metric(
+                    "Overall Score",
+                    f"{result_data['overall_score']}/10",
+                    help="Overall financial health score"
+                )
+        
+        # Recommendations
+        if result_data.get('recommendations'):
+            st.markdown("#### 🎯 Key Recommendations")
+            
+            for i, rec in enumerate(result_data['recommendations'], 1):
+                st.markdown(f"**{i}.** {rec}")
+        
+        # Spending analysis
+        if result_data.get('spending_analysis'):
+            st.markdown("#### 💰 Spending Analysis")
+            
+            spending_data = result_data['spending_analysis']
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                if 'top_categories' in spending_data:
+                    st.markdown("**Top Spending Categories:**")
+                    for category, amount in spending_data['top_categories'][:3]:
+                        st.write(f"• {category}: ${amount:,.0f}")
+            
+            with col2:
+                if 'monthly_trend' in spending_data:
+                    trend = spending_data['monthly_trend']
+                    st.markdown("**Monthly Trend:**")
+                    st.write(f"• {trend}")
+        
+        # Goal analysis
+        if result_data.get('goal_analysis'):
+            st.markdown("#### 🎯 Goal Analysis")
+            
+            goal_data = result_data['goal_analysis']
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                if 'goals_on_track' in goal_data:
+                    st.metric(
+                        "Goals On Track",
+                        goal_data['goals_on_track'],
+                        help="Number of goals meeting their targets"
+                    )
+            
+            with col2:
+                if 'goals_behind' in goal_data:
+                    st.metric(
+                        "Goals Behind",
+                        goal_data['goals_behind'],
+                        help="Number of goals needing attention"
+                    )
+        
+        # Action items
+        if result_data.get('action_items'):
+            st.markdown("#### ⚡ Immediate Action Items")
+            
+            for action in result_data['action_items']:
+                st.markdown(f"• **{action['priority']}:** {action['description']}")
+    
+    # Display raw result if it's a string
+    elif isinstance(result_data, str):
+        st.markdown("#### 📋 Analysis Details")
+        st.text_area("Full Analysis Result", result_data, height=200)
     
     # Save recommendations button
     if st.button("💾 Save to History", use_container_width=True):
@@ -339,6 +337,22 @@ def get_advice_history_from_db(customer_id: int) -> List[Dict[str, Any]]:
         st.error(f"Failed to load advice history: {e}")
         return []
 
+def parse_advice_date(date_str: str) -> date:
+    """Parse advice date string with multiple format support."""
+    if not date_str:
+        return date.min
+    
+    try:
+        # Try parsing as datetime first (with time component)
+        if 'T' in date_str or ' ' in date_str:
+            return datetime.fromisoformat(date_str.replace('Z', '+00:00')).date()
+        else:
+            # Try parsing as date only
+            return datetime.strptime(date_str, '%Y-%m-%d').date()
+    except (ValueError, TypeError):
+        # Return earliest date if parsing fails
+        return date.min
+
 def apply_advice_filters(
     advice_history: List[Dict[str, Any]], 
     advice_type_filter: str, 
@@ -366,7 +380,7 @@ def apply_advice_filters(
         
         filtered = [
             a for a in filtered 
-            if a.get('created_at') and datetime.strptime(a['created_at'], '%Y-%m-%d').date() >= cutoff_date
+            if a.get('created_at') and parse_advice_date(a['created_at']) >= cutoff_date
         ]
     
     return filtered
@@ -404,7 +418,7 @@ def render_advice_card(advice: Dict[str, Any]):
                 try:
                     created_at = advice['created_at']
                     if isinstance(created_at, str):
-                        created_date = datetime.strptime(created_at, '%Y-%m-%d').date()
+                        created_date = parse_advice_date(created_at)
                     elif isinstance(created_at, datetime):
                         created_date = created_at.date()
                     elif hasattr(created_at, 'date'):
