@@ -2,7 +2,7 @@
 ADK Agent Manager - Direct integration of ADK Web agents into Streamlit
 
 This module provides direct access to ADK Web agents without modifying them.
-Uses the working adk_web_agents as-is for maximum stability.
+Uses the working agents as-is for maximum stability.
 """
 
 import asyncio
@@ -12,8 +12,8 @@ from datetime import datetime
 from utils.logging_config import get_logger
 
 # Import ADK Web agents directly (NO MODIFICATIONS)
-from adk_web_agents.sequencer.agent import agent as sequencer_agent
-from adk_web_agents.standalone.agent import agent as standalone_agent
+from agents.sequencer.agent import agent as sequencer_agent
+from agents.standalone.agent import agent as standalone_agent
 
 logger = get_logger(__name__)
 

@@ -41,10 +41,10 @@ mcp_toolset = McpToolset(
 )
 
 # Import the specialized agents
-from adk_web_agents.spending_analyzer.agent import agent as spending_analyzer_agent
-from adk_web_agents.goal_planner.agent import agent as goal_planner_agent
-from adk_web_agents.advisor.agent import agent as advisor_agent
-from adk_web_agents.sequencer.agent import agent as sequencer_agent
+from agents.spending_analyzer.agent import agent as spending_analyzer_agent
+from agents.goal_planner.agent import agent as goal_planner_agent
+from agents.advisor.agent import agent as advisor_agent
+from agents.sequencer.agent import agent as sequencer_agent
 
 # Create agent tools for delegation
 agent_tools = [

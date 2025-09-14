@@ -201,8 +201,8 @@ class TestADKAgentManagerIntegration(unittest.TestCase):
     def test_agent_imports_available(self):
         """Test that ADK Web agents can be imported successfully."""
         try:
-            from adk_web_agents.sequencer.agent import agent as sequencer_agent
-            from adk_web_agents.standalone.agent import agent as standalone_agent
+            from agents.sequencer.agent import agent as sequencer_agent
+            from agents.standalone.agent import agent as standalone_agent
             
             # Verify agents exist and have expected properties
             self.assertIsNotNone(sequencer_agent)
@@ -215,8 +215,8 @@ class TestADKAgentManagerIntegration(unittest.TestCase):
     
     def test_agent_properties_accessible(self):
         """Test that agent properties can be accessed."""
-        from adk_web_agents.sequencer.agent import agent as sequencer_agent
-        from adk_web_agents.standalone.agent import agent as standalone_agent
+        from agents.sequencer.agent import agent as sequencer_agent
+        from agents.standalone.agent import agent as standalone_agent
         
         # Test sequencer agent properties
         self.assertEqual(sequencer_agent.name, "SequencerAgent")

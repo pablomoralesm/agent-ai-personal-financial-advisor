@@ -28,7 +28,7 @@ class TestADKWebAgentDiscovery(unittest.TestCase):
     def test_standalone_agent_import(self):
         """Test that Standalone Agent can be imported."""
         try:
-            from adk_web_agents.standalone.agent import agent
+            from agents.standalone.agent import agent
             self.assertIsNotNone(agent)
             self.assertEqual(agent.name, "StandaloneFinancialAdvisor")
         except ImportError as e:
@@ -37,7 +37,7 @@ class TestADKWebAgentDiscovery(unittest.TestCase):
     def test_sequencer_agent_import(self):
         """Test that Sequencer Agent can be imported."""
         try:
-            from adk_web_agents.sequencer.agent import agent
+            from agents.sequencer.agent import agent
             self.assertIsNotNone(agent)
             self.assertEqual(agent.name, "SequencerAgent")
         except ImportError as e:
@@ -46,7 +46,7 @@ class TestADKWebAgentDiscovery(unittest.TestCase):
     def test_orchestrator_agent_import(self):
         """Test that Orchestrator Agent can be imported."""
         try:
-            from adk_web_agents.orchestrator.agent import agent
+            from agents.orchestrator.agent import agent
             self.assertIsNotNone(agent)
             self.assertEqual(agent.name, "OrchestratorAgent")
         except ImportError as e:
@@ -55,7 +55,7 @@ class TestADKWebAgentDiscovery(unittest.TestCase):
     def test_spending_analyzer_agent_import(self):
         """Test that Spending Analyzer Agent can be imported."""
         try:
-            from adk_web_agents.spending_analyzer.agent import agent
+            from agents.spending_analyzer.agent import agent
             self.assertIsNotNone(agent)
             self.assertEqual(agent.name, "SpendingAnalyzerAgent")
         except ImportError as e:
@@ -64,7 +64,7 @@ class TestADKWebAgentDiscovery(unittest.TestCase):
     def test_goal_planner_agent_import(self):
         """Test that Goal Planner Agent can be imported."""
         try:
-            from adk_web_agents.goal_planner.agent import agent
+            from agents.goal_planner.agent import agent
             self.assertIsNotNone(agent)
             self.assertEqual(agent.name, "GoalPlannerAgent")
         except ImportError as e:
@@ -73,7 +73,7 @@ class TestADKWebAgentDiscovery(unittest.TestCase):
     def test_advisor_agent_import(self):
         """Test that Advisor Agent can be imported."""
         try:
-            from adk_web_agents.advisor.agent import agent
+            from agents.advisor.agent import agent
             self.assertIsNotNone(agent)
             self.assertEqual(agent.name, "AdvisorAgent")
         except ImportError as e:
@@ -84,7 +84,7 @@ class TestADKWebAgentStructure(unittest.TestCase):
     
     def test_standalone_agent_structure(self):
         """Test Standalone Agent structure."""
-        from adk_web_agents.standalone.agent import agent
+        from agents.standalone.agent import agent
         
         # Test agent properties
         self.assertEqual(agent.name, "StandaloneFinancialAdvisor")
@@ -95,7 +95,7 @@ class TestADKWebAgentStructure(unittest.TestCase):
     
     def test_sequencer_agent_structure(self):
         """Test Sequencer Agent structure."""
-        from adk_web_agents.sequencer.agent import agent
+        from agents.sequencer.agent import agent
         
         # Test agent properties
         self.assertEqual(agent.name, "SequencerAgent")
@@ -105,7 +105,7 @@ class TestADKWebAgentStructure(unittest.TestCase):
     
     def test_orchestrator_agent_structure(self):
         """Test Orchestrator Agent structure."""
-        from adk_web_agents.orchestrator.agent import agent
+        from agents.orchestrator.agent import agent
         
         # Test agent properties
         self.assertEqual(agent.name, "OrchestratorAgent")
@@ -116,7 +116,7 @@ class TestADKWebAgentStructure(unittest.TestCase):
     
     def test_spending_analyzer_agent_structure(self):
         """Test Spending Analyzer Agent structure."""
-        from adk_web_agents.spending_analyzer.agent import agent
+        from agents.spending_analyzer.agent import agent
         
         # Test agent properties
         self.assertEqual(agent.name, "SpendingAnalyzerAgent")
@@ -127,7 +127,7 @@ class TestADKWebAgentStructure(unittest.TestCase):
     
     def test_goal_planner_agent_structure(self):
         """Test Goal Planner Agent structure."""
-        from adk_web_agents.goal_planner.agent import agent
+        from agents.goal_planner.agent import agent
         
         # Test agent properties
         self.assertEqual(agent.name, "GoalPlannerAgent")
@@ -138,7 +138,7 @@ class TestADKWebAgentStructure(unittest.TestCase):
     
     def test_advisor_agent_structure(self):
         """Test Advisor Agent structure."""
-        from adk_web_agents.advisor.agent import agent
+        from agents.advisor.agent import agent
         
         # Test agent properties
         self.assertEqual(agent.name, "AdvisorAgent")
@@ -152,7 +152,7 @@ class TestADKWebAgentDescriptions(unittest.TestCase):
     
     def test_standalone_agent_description(self):
         """Test Standalone Agent description content."""
-        from adk_web_agents.standalone.agent import agent
+        from agents.standalone.agent import agent
         
         description = agent.description
         # Check for key concepts
@@ -162,7 +162,7 @@ class TestADKWebAgentDescriptions(unittest.TestCase):
     
     def test_sequencer_agent_description(self):
         """Test Sequencer Agent description content."""
-        from adk_web_agents.sequencer.agent import agent
+        from agents.sequencer.agent import agent
         
         description = agent.description
         # Check for key concepts
@@ -174,7 +174,7 @@ class TestADKWebAgentDescriptions(unittest.TestCase):
     
     def test_orchestrator_agent_description(self):
         """Test Orchestrator Agent description content."""
-        from adk_web_agents.orchestrator.agent import agent
+        from agents.orchestrator.agent import agent
         
         description = agent.description
         # Check for key concepts
@@ -188,7 +188,7 @@ class TestADKWebAgentMCPIntegration(unittest.TestCase):
     
     def test_standalone_agent_has_mcp_tools(self):
         """Test that Standalone Agent has MCP tools configured."""
-        from adk_web_agents.standalone.agent import agent
+        from agents.standalone.agent import agent
         
         self.assertIsNotNone(agent.tools)
         self.assertEqual(len(agent.tools), 1)
@@ -198,7 +198,7 @@ class TestADKWebAgentMCPIntegration(unittest.TestCase):
     
     def test_sequencer_agent_has_sub_agents(self):
         """Test that Sequencer Agent has sub-agents configured."""
-        from adk_web_agents.sequencer.agent import agent
+        from agents.sequencer.agent import agent
         
         self.assertIsNotNone(agent.sub_agents)
         self.assertEqual(len(agent.sub_agents), 3)
@@ -211,7 +211,7 @@ class TestADKWebAgentMCPIntegration(unittest.TestCase):
     
     def test_orchestrator_agent_has_mcp_tools(self):
         """Test that Orchestrator Agent has MCP tools configured."""
-        from adk_web_agents.orchestrator.agent import agent
+        from agents.orchestrator.agent import agent
         
         self.assertIsNotNone(agent.tools)
         self.assertGreater(len(agent.tools), 1)  # Has MCPToolset + agent tools
@@ -224,11 +224,11 @@ class TestADKWebAgentConsistency(unittest.TestCase):
     
     def test_all_agents_use_same_model(self):
         """Test that all agents use the same model."""
-        from adk_web_agents.standalone.agent import agent as standalone_agent
-        from adk_web_agents.orchestrator.agent import agent as orchestrator_agent
-        from adk_web_agents.spending_analyzer.agent import agent as spending_agent
-        from adk_web_agents.goal_planner.agent import agent as goal_agent
-        from adk_web_agents.advisor.agent import agent as advisor_agent
+        from agents.standalone.agent import agent as standalone_agent
+        from agents.orchestrator.agent import agent as orchestrator_agent
+        from agents.spending_analyzer.agent import agent as spending_agent
+        from agents.goal_planner.agent import agent as goal_agent
+        from agents.advisor.agent import agent as advisor_agent
         
         agents = [standalone_agent, orchestrator_agent, spending_agent, goal_agent, advisor_agent]
         models = [agent.model for agent in agents]
@@ -239,11 +239,11 @@ class TestADKWebAgentConsistency(unittest.TestCase):
     
     def test_all_agents_have_tools(self):
         """Test that all agents have tools configured."""
-        from adk_web_agents.standalone.agent import agent as standalone_agent
-        from adk_web_agents.orchestrator.agent import agent as orchestrator_agent
-        from adk_web_agents.spending_analyzer.agent import agent as spending_agent
-        from adk_web_agents.goal_planner.agent import agent as goal_agent
-        from adk_web_agents.advisor.agent import agent as advisor_agent
+        from agents.standalone.agent import agent as standalone_agent
+        from agents.orchestrator.agent import agent as orchestrator_agent
+        from agents.spending_analyzer.agent import agent as spending_agent
+        from agents.goal_planner.agent import agent as goal_agent
+        from agents.advisor.agent import agent as advisor_agent
         
         agents = [standalone_agent, orchestrator_agent, spending_agent, goal_agent, advisor_agent]
         
@@ -254,12 +254,12 @@ class TestADKWebAgentConsistency(unittest.TestCase):
     
     def test_agent_names_are_unique(self):
         """Test that all agent names are unique."""
-        from adk_web_agents.standalone.agent import agent as standalone_agent
-        from adk_web_agents.sequencer.agent import agent as sequencer_agent
-        from adk_web_agents.orchestrator.agent import agent as orchestrator_agent
-        from adk_web_agents.spending_analyzer.agent import agent as spending_agent
-        from adk_web_agents.goal_planner.agent import agent as goal_agent
-        from adk_web_agents.advisor.agent import agent as advisor_agent
+        from agents.standalone.agent import agent as standalone_agent
+        from agents.sequencer.agent import agent as sequencer_agent
+        from agents.orchestrator.agent import agent as orchestrator_agent
+        from agents.spending_analyzer.agent import agent as spending_agent
+        from agents.goal_planner.agent import agent as goal_agent
+        from agents.advisor.agent import agent as advisor_agent
         
         names = [
             standalone_agent.name,
@@ -286,7 +286,7 @@ class TestADKWebAgentFiles(unittest.TestCase):
     
     def test_agent_directories_exist(self):
         """Test that all agent directories exist."""
-        base_path = Path(__file__).parent.parent / "adk_web_agents"
+        base_path = Path(__file__).parent.parent / "agents"
         
         expected_dirs = [
             "standalone",
@@ -305,7 +305,7 @@ class TestADKWebAgentFiles(unittest.TestCase):
     
     def test_agent_files_exist(self):
         """Test that all required agent files exist."""
-        base_path = Path(__file__).parent.parent / "adk_web_agents"
+        base_path = Path(__file__).parent.parent / "agents"
         
         expected_files = [
             "standalone/__init__.py",
@@ -331,7 +331,7 @@ class TestADKWebAgentFiles(unittest.TestCase):
     
     def test_readme_exists_and_has_content(self):
         """Test that README exists and has meaningful content."""
-        readme_path = Path(__file__).parent.parent / "adk_web_agents" / "README.md"
+        readme_path = Path(__file__).parent.parent / "agents" / "README.md"
         
         self.assertTrue(readme_path.exists(), "README.md does not exist")
         

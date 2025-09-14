@@ -22,9 +22,9 @@ from utils.logging_config import get_logger
 logger = get_logger(__name__)
 
 # Import the specialized agents
-from adk_web_agents.spending_analyzer.agent import agent as spending_analyzer_agent
-from adk_web_agents.goal_planner.agent import agent as goal_planner_agent
-from adk_web_agents.advisor.agent import agent as advisor_agent
+from agents.spending_analyzer.agent import agent as spending_analyzer_agent
+from agents.goal_planner.agent import agent as goal_planner_agent
+from agents.advisor.agent import agent as advisor_agent
 
 # Create the SequentialAgent with the specialized agents as sub-agents
 agent = SequentialAgent(

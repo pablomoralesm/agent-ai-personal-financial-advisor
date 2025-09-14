@@ -53,7 +53,7 @@ cd /path/to/agent-ai-personal-financial-advisor
 source venv/bin/activate
 
 # Start ADK Web with the agents directory
-adk web adk_web_agents
+adk web agents
 ```
 
 ### **Agent Selection**
