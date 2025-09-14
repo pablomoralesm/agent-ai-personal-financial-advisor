@@ -202,9 +202,8 @@ Each agent directory contains:
 
 ## 📖 **Related Documentation**
 
-- [Multi-Agent Architecture Plan](../MULTI_AGENT_ARCHITECTURE_PLAN.md)
-- [Unified Agent System](../agents/unified/README.md)
 - [MCP Server Documentation](../mcp_server/README.md)
+- [Main Project README](../README.md)
 
 ---
 

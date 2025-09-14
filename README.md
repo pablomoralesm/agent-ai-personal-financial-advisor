@@ -416,24 +416,23 @@ adk web adk_web_agents
    python mcp_server/database_server.py
    ```
 
-2. **Test Individual Agents**:
+2. **Test ADK Web Agents**:
    ```python
-   from agents.spending_analyzer import create_spending_analyzer_agent
-   from agents.goal_planner import create_goal_planner_agent
-   from agents.advisor import create_advisor_agent
+   from adk_web_agents.standalone.agent import agent as standalone_agent
+   from adk_web_agents.sequencer.agent import agent as sequencer_agent
+   from adk_web_agents.orchestrator.agent import agent as orchestrator_agent
    
    # Test agent creation
-   mcp_path = "mcp_server/database_server.py"
-   analyzer = create_spending_analyzer_agent(mcp_path)
-   planner = create_goal_planner_agent(mcp_path)
-   advisor = create_advisor_agent(mcp_path)
+   mcp_path = "mcp_server/database_server_stdio.py"
+   # Agents are already configured and ready to use
    ```
 
-3. **Test Orchestrator**:
+3. **Test ADK Agent Manager**:
    ```python
-   from agents.orchestrator import create_financial_advisor_orchestrator
+   from utils.adk_agent_manager import ADKAgentManager
    
-   orchestrator = create_financial_advisor_orchestrator("mcp_server/database_server.py")
+   manager = ADKAgentManager(mcp_server_path="mcp_server/database_server_stdio.py")
+   status = manager.get_agent_status()
    ```
 
 ### Automated Tests
@@ -501,23 +500,13 @@ agent-ai-personal-financial-advisor/
 │   │   ├── database_manager.py # Database operations
 │   │   └── models.py          # Data models
 │   └── README.md              # MCP server documentation
-├── agents/                     # Legacy Agent System
-│   ├── spending_analyzer.py    # Legacy SpendingAnalyzerAgent
-│   ├── goal_planner.py        # Legacy GoalPlannerAgent
-│   ├── advisor.py             # Legacy AdvisorAgent
-│   ├── orchestrator.py        # Legacy orchestration agent
-│   └── __init__.py
-├── agents/unified/             # Unified Multi-Agent System
-│   ├── __init__.py
-│   ├── base_agent.py          # Base classes for unified agents
-│   ├── procedural_orchestrator.py # Procedural orchestration
-│   ├── intelligent_orchestrator.py # LLM-based orchestration
-│   ├── agent_factory.py       # Agent creation factory
-│   └── deployment_configs.py  # Deployment configurations
 ├── adk_web_agents/            # ADK Web Agent System
-│   ├── financial_advisor/     # Financial advisor for ADK Web
-│   ├── procedural_orchestrator/ # Procedural orchestrator for ADK Web
-│   ├── intelligent_orchestrator/ # Intelligent orchestrator for ADK Web
+│   ├── standalone/            # Standalone financial advisor agent
+│   ├── sequencer/             # Sequential multi-agent orchestrator
+│   ├── orchestrator/          # Intelligent multi-agent orchestrator
+│   ├── spending_analyzer/     # Spending analysis specialist
+│   ├── goal_planner/          # Financial goal planning specialist
+│   ├── advisor/               # Financial advice synthesis specialist
 │   └── README.md              # ADK Web documentation
 ├── ui/
 │   └── components/            # UI components
@@ -529,23 +518,18 @@ agent-ai-personal-financial-advisor/
 │   ├── database.py            # Database connection utilities
 │   ├── database_client.py     # Direct database access for UI
 │   ├── logging_config.py     # Logging configuration
-│   ├── unified_agent_executor.py # Hybrid agent executor
-│   ├── agent_executor.py      # Legacy agent executor
-│   └── adk_session_manager.py # ADK session management
-└── tests/                     # Comprehensive test suite (100+ tests)
+│   └── adk_agent_manager.py  # ADK agent management for Streamlit
+└── tests/                     # Comprehensive test suite
     ├── __init__.py
     ├── conftest.py            # Pytest configuration & fixtures
-    ├── test_agents.py         # Legacy agent tests
-    ├── test_unified_agents.py # Unified agent unit tests
-    ├── test_unified_agents_integration.py # Integration tests
-    ├── test_multi_agent_interactions.py # Multi-agent interaction tests
     ├── test_adk_web_agents.py # ADK Web agent tests
+    ├── test_adk_agent_manager.py # ADK agent manager tests
     ├── test_mcp_server.py     # MCP server tests
     ├── test_utils.py          # Utility function tests
     ├── test_ui_components.py  # UI component tests
     ├── test_streamlit_integration.py # Streamlit integration tests
-    ├── test_hybrid_agent_executor.py # Hybrid executor tests
-    └── test_ui_analysis.py    # UI analysis tests
+    ├── run_tests.py           # Test runner script
+    └── README.md              # Testing documentation
 ```
 
 ## 🎓 Educational Value
@@ -589,7 +573,7 @@ The project includes a comprehensive test suite designed to help students learn 
 python tests/run_tests.py
 
 # Run specific test categories
-pytest tests/test_agents.py -v
+pytest tests/test_adk_web_agents.py -v
 pytest tests/test_mcp_server.py -v
 pytest tests/test_utils.py -v
 pytest tests/test_ui_components.py -v
