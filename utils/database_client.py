@@ -199,22 +199,45 @@ def get_advice_history(customer_id: int) -> List[Dict[str, Any]]:
     """Get advice history for a customer."""
     try:
         query = """
-        SELECT id, customer_id, advice_type, advice_text, agent_name,
+        SELECT id, customer_id, advice_type, advice_content, agent_name,
                confidence_score, created_at
         FROM advice_history 
         WHERE customer_id = %s 
         ORDER BY created_at DESC
         """
         result = db_client.execute_query(query, (customer_id,))
-        return result if result else []
+        
+        if not result:
+            logger.info(f"No advice history found for customer {customer_id}")
+            return []
+        
+        # Convert datetime objects to ISO format strings for JSON serialization
+        for record in result:
+            if record.get('created_at'):
+                if hasattr(record['created_at'], 'isoformat'):
+                    record['created_at'] = record['created_at'].isoformat()
+                else:
+                    record['created_at'] = str(record['created_at'])
+            
+            # Convert confidence_score to float if it exists
+            if record.get('confidence_score') is not None:
+                record['confidence_score'] = float(record['confidence_score'])
+            
+            # Ensure advice_content is a string
+            if record.get('advice_content') is None:
+                record['advice_content'] = ""
+        
+        logger.info(f"Retrieved {len(result)} advice records for customer {customer_id}")
+        return result
+        
     except Exception as e:
-        logger.error(f"Error getting advice history: {e}")
+        logger.error(f"Error getting advice history for customer {customer_id}: {e}")
         return []
 
 def save_advice(
     customer_id: int,
     advice_type: str,
-    advice_text: str,
+    advice_content: str,
     agent_name: str,
     confidence_score: float
 ) -> bool:
@@ -222,12 +245,12 @@ def save_advice(
     try:
         query = """
         INSERT INTO advice_history 
-        (customer_id, advice_type, advice_text, agent_name, 
+        (customer_id, advice_type, advice_content, agent_name, 
          confidence_score, created_at)
         VALUES (%s, %s, %s, %s, %s, %s)
         """
         params = (
-            customer_id, advice_type, advice_text, agent_name,
+            customer_id, advice_type, advice_content, agent_name,
             confidence_score, datetime.now()
         )
         
@@ -287,3 +310,29 @@ def get_all_customers() -> List[Dict[str, Any]]:
     except Exception as e:
         logger.error(f"Error getting all customers: {e}")
         return []
+
+def clear_old_advice_records(customer_id: int, days_old: int = 30) -> bool:
+    """Clear advice records older than specified days."""
+    try:
+        query = """
+        DELETE FROM advice_history 
+        WHERE customer_id = %s 
+        AND created_at < DATE_SUB(NOW(), INTERVAL %s DAY)
+        """
+        result = db_client.execute_query(query, (customer_id, days_old), fetch_all=False)
+        logger.info(f"Cleared {result} old advice records for customer {customer_id}")
+        return result > 0
+    except Exception as e:
+        logger.error(f"Error clearing old advice records: {e}")
+        return False
+
+def clear_all_advice_records(customer_id: int) -> bool:
+    """Clear all advice records for a customer."""
+    try:
+        query = "DELETE FROM advice_history WHERE customer_id = %s"
+        result = db_client.execute_query(query, (customer_id,), fetch_all=False)
+        logger.info(f"Cleared all {result} advice records for customer {customer_id}")
+        return True
+    except Exception as e:
+        logger.error(f"Error clearing all advice records: {e}")
+        return False

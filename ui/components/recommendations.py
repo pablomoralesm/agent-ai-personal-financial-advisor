@@ -27,12 +27,26 @@ def render_recommendations():
     
     with col2:
         if st.button("🚀 Run Full Financial Analysis", type="primary", use_container_width=True):
+            # Create a progress container for better UX
+            progress_container = st.container()
+            with progress_container:
+                st.info("🔄 Starting financial analysis...")
+            
             with st.spinner("Running comprehensive financial analysis with multi-agent coordination..."):
-                recommendations = run_financial_analysis(customer_id)
-                if recommendations:
-                    st.session_state.current_recommendations = recommendations
-                    st.success("✅ Full analysis complete! View recommendations below.")
-                    st.rerun()
+                try:
+                    recommendations = run_financial_analysis(customer_id)
+                    if recommendations:
+                        st.session_state.current_recommendations = recommendations
+                        progress_container.empty()  # Clear the progress message
+                        st.success("✅ Full analysis complete! View recommendations below.")
+                        st.rerun()
+                    else:
+                        progress_container.empty()
+                        st.error("❌ Analysis failed. Please try again.")
+                except Exception as e:
+                    progress_container.empty()
+                    st.error(f"❌ Analysis failed: {str(e)}")
+                    logger.error(f"Analysis error for customer {customer_id}: {e}")
     
     # Analysis description
     st.markdown("""
@@ -91,19 +105,38 @@ def save_advice_to_db(customer_id: int, advice_data: Dict[str, Any]) -> bool:
         
         # Create advice summary from ADK agent result
         if isinstance(result_data, dict):
+            # Use the actual summary from agent outputs
             advice_summary = result_data.get('summary', f'{analysis_type.title()} analysis completed using {agent_used}')
-            recommendations = result_data.get('recommendations', [])
+            
+            # Extract agent summaries (the actual generated content)
+            agent_summaries = result_data.get('agent_summaries', {})
+            agent_outputs = result_data.get('agent_outputs', {})
             spending_analysis = result_data.get('spending_analysis', {})
-            goal_analysis = result_data.get('goal_analysis', {})
+            goal_planning = result_data.get('goal_planning', {})
+            financial_advice = result_data.get('financial_advice', {})
+            
+            # Extract recommendations from agent summaries or structured outputs
+            recommendations = []
+            if agent_summaries:
+                # Use agent summaries for recommendations
+                for agent_name, summaries in agent_summaries.items():
+                    if summaries and 'recommendation' in ' '.join(summaries).lower():
+                        recommendations.extend(summaries)
+            elif isinstance(financial_advice, dict):
+                recommendations = financial_advice.get('recommendations', [])
+            elif isinstance(financial_advice, str) and 'recommendation' in financial_advice.lower():
+                recommendations = [financial_advice]
         else:
             # If result is a string or other format
             advice_summary = f'{analysis_type.title()} analysis completed using {agent_used}'
             recommendations = []
+            agent_summaries = {}
             spending_analysis = {}
-            goal_analysis = {}
+            goal_planning = {}
+            financial_advice = {}
         
-        # Create detailed advice text
-        advice_text = f"""
+        # Create detailed advice content from actual agent summaries
+        advice_content = f"""
 {advice_summary}
 
 **Analysis Type:** {analysis_type.title()}
@@ -112,17 +145,21 @@ def save_advice_to_db(customer_id: int, advice_data: Dict[str, Any]) -> bool:
 **Key Recommendations:**
 {chr(10).join([f"• {rec}" for rec in recommendations[:5]]) if recommendations else "• No specific recommendations available"}
 
-**Spending Insights:**
-{chr(10).join([f"• {key}: {value}" for key, value in spending_analysis.items()][:3]) if spending_analysis else "• No spending analysis available"}
+**Individual Agent Summaries:**
+{self._format_agent_summaries(agent_summaries) if agent_summaries else "• No agent summaries available"}
 
-**Goal Progress:**
-{chr(10).join([f"• {key}: {value}" for key, value in goal_analysis.items()][:3]) if goal_analysis else "• No goal analysis available"}
+**Structured Analysis:**
+**Spending Analysis:** {self._format_agent_output(spending_analysis) if spending_analysis else "• No spending analysis available"}
+
+**Goal Planning:** {self._format_agent_output(goal_planning) if goal_planning else "• No goal planning available"}
+
+**Financial Advice:** {self._format_agent_output(financial_advice) if financial_advice else "• No financial advice available"}
         """.strip()
         
         success = save_advice(
             customer_id=customer_id,
             advice_type=f'{analysis_type}_analysis',
-            advice_text=advice_text,
+            advice_content=advice_content,
             agent_name=agent_used,
             confidence_score=0.85
         )
@@ -166,14 +203,51 @@ def render_current_recommendations(recommendations: Dict[str, Any]):
         else:
             st.metric("Completed", "Unknown")
     
-    # Get the actual result data
+    # Get the actual result data (needed for both paths)
     result_data = recommendations.get('result', {})
     
-    # Summary
-    if isinstance(result_data, dict) and result_data.get('summary'):
-        st.info(f"**Summary:** {result_data['summary']}")
-    elif isinstance(result_data, str):
-        st.info(f"**Analysis Result:** {result_data}")
+    # Get the newly created advice records from database
+    customer_id = recommendations.get('customer_id')
+    if customer_id:
+        st.markdown("#### 🆕 Newly Generated Advice")
+        
+        # Get the most recent advice records (last 5)
+        try:
+            from utils.database_client import get_advice_history
+            recent_advice = get_advice_history(customer_id)
+            
+            if recent_advice:
+                # Show only the most recent 3-5 records
+                display_count = min(5, len(recent_advice))
+                for i, advice in enumerate(recent_advice[:display_count]):
+                    with st.expander(f"📋 {advice.get('advice_type', 'Advice').replace('_', ' ').title()} - {advice.get('agent_name', 'Unknown Agent')}", expanded=(i == 0)):
+                        if advice.get('advice_content'):
+                            st.markdown(advice['advice_content'])
+                        else:
+                            st.info("No detailed content available for this advice record.")
+                        
+                        # Show metadata
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            if advice.get('confidence_score'):
+                                st.caption(f"Confidence: {float(advice['confidence_score'])*100:.0f}%")
+                        with col2:
+                            if advice.get('created_at'):
+                                st.caption(f"Generated: {advice['created_at']}")
+                        with col3:
+                            st.caption(f"Agent: {advice.get('agent_name', 'Unknown')}")
+            else:
+                st.info("No advice records found. The analysis may still be processing.")
+        except Exception as e:
+            st.error(f"Unable to load advice records: {str(e)}")
+            logger.error(f"Error loading advice records: {e}")
+    
+    # Fallback: Show summary if no database records
+    else:
+        if isinstance(result_data, dict) and result_data.get('summary'):
+            st.info(f"**Summary:** {result_data['summary']}")
+        elif isinstance(result_data, str):
+            st.info(f"**Analysis Result:** {result_data}")
     
     # Key metrics (if available in result)
     if isinstance(result_data, dict):
@@ -266,32 +340,113 @@ def render_current_recommendations(recommendations: Dict[str, Any]):
         st.markdown("#### 📋 Analysis Details")
         st.text_area("Full Analysis Result", result_data, height=200)
     
-    # Save recommendations button
-    if st.button("💾 Save to History", use_container_width=True):
-        if save_recommendations_to_history(recommendations):
-            st.success("✅ Recommendations saved to history!")
-        else:
-            st.error("❌ Failed to save recommendations")
+    # Note: Recommendations are automatically saved to history when generated
+    # No manual save button needed - this improves UX by removing confusion
 
-def save_recommendations_to_history(recommendations: Dict[str, Any]) -> bool:
-    """Save current recommendations to history."""
+# Removed save_recommendations_to_history function - was a placeholder
+# Recommendations are automatically saved when generated via save_advice_to_db()
+
+def _format_agent_output(agent_output: Any) -> str:
+    """Format agent output for display in advice content."""
+    if isinstance(agent_output, dict):
+        # Extract key information from structured output
+        if 'summary' in agent_output:
+            return f"• {agent_output['summary']}"
+        elif 'recommendations' in agent_output:
+            recs = agent_output['recommendations']
+            if isinstance(recs, list):
+                return chr(10).join([f"• {rec}" for rec in recs[:3]])
+            else:
+                return f"• {recs}"
+        else:
+            # Format key-value pairs
+            items = list(agent_output.items())[:3]
+            return chr(10).join([f"• {key}: {value}" for key, value in items])
+    elif isinstance(agent_output, str):
+        # Truncate long strings
+        if len(agent_output) > 200:
+            return f"• {agent_output[:200]}..."
+        else:
+            return f"• {agent_output}"
+    else:
+        return f"• {str(agent_output)[:100]}..."
+
+def _format_agent_summaries(agent_summaries: Dict[str, list]) -> str:
+    """Format agent summaries for display in advice content."""
+    if not agent_summaries:
+        return "• No agent summaries available"
+    
+    formatted_summaries = []
+    for agent_name, summaries in agent_summaries.items():
+        if summaries:
+            # Join all summaries from this agent
+            agent_summary = "\n".join(summaries)
+            # Truncate if too long
+            if len(agent_summary) > 300:
+                agent_summary = agent_summary[:300] + "..."
+            formatted_summaries.append(f"**{agent_name}:**\n{agent_summary}")
+    
+    return "\n\n".join(formatted_summaries) if formatted_summaries else "• No agent summaries available"
+
+def clear_old_advice_records(customer_id: int) -> bool:
+    """Clear advice records older than 30 days."""
     try:
-        # This would typically save to a more detailed history table
-        # For now, we'll just mark it as saved
-        return True
+        from utils.database_client import clear_old_advice_records
+        return clear_old_advice_records(customer_id)
     except Exception as e:
-        logger.error(f"Error saving recommendations to history: {e}")
+        logger.error(f"Error clearing old advice records: {e}")
+        return False
+
+def clear_all_advice_records(customer_id: int) -> bool:
+    """Clear all advice records for a customer."""
+    try:
+        from utils.database_client import clear_all_advice_records
+        return clear_all_advice_records(customer_id)
+    except Exception as e:
+        logger.error(f"Error clearing all advice records: {e}")
         return False
 
 def render_advice_history(customer_id: int):
     """Render advice history from database."""
     st.markdown("### 📚 Advice History")
     
-    # Get advice history from database
-    advice_history = get_advice_history_from_db(customer_id)
+    # Add cleanup controls at the top
+    col1, col2, col3 = st.columns([2, 1, 1])
+    
+    with col1:
+        st.markdown("Manage your advice history:")
+    
+    with col2:
+        if st.button("🗑️ Clear Old Records", help="Remove advice records older than 30 days"):
+            if clear_old_advice_records(customer_id):
+                st.success("✅ Old advice records cleared!")
+                st.rerun()
+            else:
+                st.error("❌ Failed to clear old records")
+    
+    with col3:
+        if st.button("🧹 Clear All", help="Remove all advice records (use with caution)"):
+            if st.session_state.get('confirm_clear_all', False):
+                if clear_all_advice_records(customer_id):
+                    st.success("✅ All advice records cleared!")
+                    st.session_state.confirm_clear_all = False
+                    st.rerun()
+                else:
+                    st.error("❌ Failed to clear all records")
+            else:
+                st.session_state.confirm_clear_all = True
+                st.warning("⚠️ Click again to confirm clearing ALL advice records")
+    
+    # Show loading state while fetching advice history
+    with st.spinner("Loading advice history..."):
+        advice_history = get_advice_history_from_db(customer_id)
     
     if not advice_history:
         st.info("No previous advice found. Run your first analysis above!")
+        
+        # Add retry button if there was an error
+        if st.button("🔄 Retry Loading Advice History", key="retry_advice_history"):
+            st.rerun()
         return
     
     # Filter options
@@ -318,6 +473,9 @@ def render_advice_history(customer_id: int):
         st.info("No advice matches the selected filters.")
         return
     
+    # Show summary of filtered results
+    st.info(f"📊 Showing {len(filtered_advice)} of {len(advice_history)} advice records")
+    
     # Display filtered advice
     for advice in filtered_advice:
         render_advice_card(advice)
@@ -333,8 +491,10 @@ def get_advice_history_from_db(customer_id: int) -> List[Dict[str, Any]]:
         return advice_list
             
     except Exception as e:
-        logger.error(f"Error getting advice history: {e}")
-        st.error(f"Failed to load advice history: {e}")
+        logger.error(f"Error getting advice history for customer {customer_id}: {e}")
+        # Show user-friendly error message
+        st.error(f"❌ Unable to load advice history. Please try refreshing the page.")
+        st.caption(f"Technical details: {str(e)[:100]}...")
         return []
 
 def parse_advice_date(date_str: str) -> date:
@@ -441,32 +601,18 @@ def render_advice_card(advice: Dict[str, Any]):
                     st.write("**Invalid date**")
         
         # Advice content
-        if advice.get('advice_text'):
+        if advice.get('advice_content'):
             st.markdown("**Advice:**")
-            st.write(advice['advice_text'])
+            st.write(advice['advice_content'])
         
         # Agent information
         if advice.get('agent_name'):
             st.caption(f"Generated by: {advice['agent_name']}")
         
-        # Action buttons
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            if st.button(f"📋 Copy", key=f"copy_{advice.get('id', 'unknown')}"):
-                st.write("📋 Copied to clipboard!")
-        
-        with col2:
-            if st.button(f"⭐ Rate", key=f"rate_{advice.get('id', 'unknown')}"):
-                show_rating_dialog(advice)
-        
-        with col3:
-            if st.button(f"🔄 Re-run", key=f"rerun_{advice.get('id', 'unknown')}"):
-                st.info("This would re-run the analysis with updated data")
+        # Action buttons - Removed non-functional buttons for better UX
+        # (Copy, Rate, Re-run buttons were placeholders and have been removed)
 
-def show_rating_dialog(advice: Dict[str, Any]):
-    """Show dialog for rating advice."""
-    st.info("Rating functionality would be implemented here to collect user feedback on advice quality")
+# Removed show_rating_dialog function - was a placeholder
 
 def render_quick_insights(customer_id: int):
     """Render quick financial insights."""
