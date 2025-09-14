@@ -137,34 +137,29 @@ def render_customer_selector():
             st.session_state.customer_id = selected_customer['id']
             st.rerun()
     
-    # Database Connection Status
+    # System Status
     st.sidebar.markdown("---")
     st.sidebar.markdown("## 🔧 System Status")
     
     # Agent System Status
-    st.sidebar.markdown("### 🤖 Agent System")
     try:
         from utils.adk_agent_manager import ADKAgentManager
         manager = ADKAgentManager(mcp_server_path=st.session_state.mcp_server_path)
         agent_status = manager.get_agent_status()
         
-        st.sidebar.success("✅ ADK Agent System")
-        st.sidebar.info(f"**Manager:** {agent_status['agent_manager']}")
-        st.sidebar.info(f"**Integration:** {agent_status['integration_type']}")
-        st.sidebar.info(f"**Context:** {agent_status['deployment_context']}")
+        st.sidebar.success("✅ AI Agents Ready")
         
-        # Show available agents
-        st.sidebar.markdown("**Available Agents:**")
+        # Show available agents in a cleaner format
+        st.sidebar.markdown("**Available Analysis:**")
         for agent in agent_status['available_agents']:
             st.sidebar.info(f"• {agent}")
         
     except Exception as e:
-        st.sidebar.error(f"❌ Agent System Error: {str(e)}")
+        st.sidebar.error(f"❌ AI Agents: Error")
     
-    # Test database connection
+    # Database connection status
     try:
         from utils.database_client import db_client
-        # Try to get a connection
         connection = db_client.get_connection()
         if connection.is_connected():
             st.sidebar.success("✅ Database: Connected")
@@ -172,17 +167,7 @@ def render_customer_selector():
         else:
             st.sidebar.error("❌ Database: Connection Failed")
     except Exception as e:
-        st.sidebar.error(f"❌ Database: Error - {str(e)[:50]}...")
-    
-    # MCP Server Status
-    mcp_path = st.session_state.mcp_server_path
-    if os.path.exists(mcp_path):
-        st.sidebar.success("✅ MCP Server: Ready")
-    else:
-        st.sidebar.error("❌ MCP Server: Not Found")
-        st.sidebar.info(f"Expected path: {mcp_path}")
-    
-    # MCP Process status removed - unified agent system uses direct MCP integration
+        st.sidebar.error("❌ Database: Error")
 
 def render_welcome_screen():
     """Render welcome screen when no customer is selected."""
